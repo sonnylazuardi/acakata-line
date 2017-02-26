@@ -8,7 +8,7 @@
     "test": "ava test --verbose",
     "watch": "npm run build && ava test --verbose --watch",
     "build": "babel src -d build",
-    "dev": "nodemon --exec NODE_ENV=development babel-node ./index.js",
+    "dev": "nodemon --exec NODE_ENV=development babel-node src/index.js",
     "start": "npm run build && NODE_ENV=production node build/index.js"
   },
   "repository": {
@@ -22,12 +22,12 @@
   },
   "homepage": "https://github.com/sonnylazuardi/family100-bot#readme",
   "dependencies": {
-    "eventemitter3": "^2.0.2",
-    "node-line-messaging-api": "^0.12.2",
     "ava": "^0.18.1",
     "babel-cli": "^6.16.0",
     "babel-preset-es2015": "^6.16.0",
     "babel-preset-stage-3": "^6.17.0",
+    "eventemitter3": "^2.0.2",
+    "node-line-messaging-api": "^0.12.2",
     "nodemon": "^1.11.0"
   },
   "ava": {
