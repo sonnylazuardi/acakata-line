@@ -8,12 +8,15 @@ export default class Rooms {
 
   createRooms() {
     const roomName = this.generateRoomsName()
-    this.rooms['test'] = []
+    if (!this.rooms.hasOwnProperty('test')) {
+      this.rooms['test'] = []
+    }
   }
 
   addUser({ id, replyToken, roomName }) {
     if(this.rooms[roomName]) {
-      this.rooms[roomName].push(new User({ id, replyToken }))
+      this.rooms[roomName][id] = new User({ id, replyToken })
+      console.log(this.rooms[roomName])
     }
   }
 
@@ -25,10 +28,16 @@ export default class Rooms {
     delete this.rooms[roomName]
   }
 
-  broadCast({roomName , message, callback}) {
-    for(let i =0;i<this.rooms[roomName].length;i++){
-      const user = this.rooms[roomName][i]
-      callback(user)
-    }
+  checkUserExist(roomName, id) {
+    return this.rooms[roomName].hasOwnProperty(id)
+  }
+
+  broadCast({source, roomName , message, callback}) {
+    Object.keys(this.rooms[roomName]).forEach((key) => {
+      if(source == key) {
+        const user = this.rooms[roomName][key]
+        callback(user)
+      }  
+    })
   }
 }

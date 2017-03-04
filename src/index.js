@@ -27,9 +27,12 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if(text == '/join') {
     room.createRooms();
     room.addUser({id:source.userId, replyToken: replyToken, roomName:'test'})
-    room.broadCast({roomName:'test', message:'something', callback: (user) => {
-      bot.replyMessage(user.replyToken, new Bot.Messages().addText(`${user.lineId} said: broadcast`).commit());
-    }})
+  }else {
+    if(room.checkUserExist('test', source.userId)) {
+      room.broadCast({source: source.userId, roomName:'test', message:text, callback: (user) => {
+        bot.pushMessage(user.lineId, new Bot.Messages().addText(`${user.lineId} said: ${text}`).commit());
+      }})
+    }
   }
 
 });
