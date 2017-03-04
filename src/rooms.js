@@ -34,10 +34,10 @@ export default class Rooms {
 
   broadCast({source, roomName , message, callback}) {
     Object.keys(this.rooms[roomName]).forEach((key) => {
-      if(source == key) {
+      if(source != key) {
         const user = this.rooms[roomName][key]
         callback(user)
-      }  
+      }
     })
   }
 }
