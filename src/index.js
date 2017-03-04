@@ -8,7 +8,7 @@ const SECRET = `367d38f1f36d2b9c3de59437a88ddd23`
 const TOKEN = `8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=`
 
 const PORT = process.env.PORT || 3002
-const bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: true } })
+const bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: false } })
 const room = new Rooms()
 
 bot.on('webhook', w => {
