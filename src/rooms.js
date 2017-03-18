@@ -38,11 +38,23 @@ export default class Rooms {
   //   return this.rooms[roomName].hasOwnProperty(id)
   // }
 
+  removeUser({ lineId, roomId }) {
+    const store = this.store;
+    store.dispatch({
+      type: 'REMOVE_USER',
+      payload: {
+        user: {
+          lineId,
+          roomId
+        }
+      }
+    });
+  }
+
   broadCast({roomId, callback}) {
     const state = this.store.getState();
     Object.keys(state.rooms[roomId]).forEach((key) => {
       const user = state.rooms[roomId][key];
-      // console.log('USER', user);
       callback(user);
     })
   }

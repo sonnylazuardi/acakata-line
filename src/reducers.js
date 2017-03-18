@@ -84,8 +84,26 @@ export default function questions(state = initialState, action) {
           }
         }
       }
+    case 'REMOVE_USER':
+      var updateRoom = Object.keys(state.rooms[payload.user.roomId]).filter(key => {
+        return key != payload.user.lineId;
+      }).reduce((acc, key) => {
+        return {
+          ...acc,
+          [key]: state.rooms[payload.user.roomId][key]
+        };
+      }, {});
+      var newState = {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          [payload.user.roomId]: updateRoom
+        }
+      }
+      console.log('ROOMS', newState.rooms);
+      return newState;
     case 'ADD_USER':
-      const updateRoom = {
+      var updateRoom = {
         ...state.rooms[payload.user.roomId],
         [payload.user.lineId]: {
           lineId: payload.user.lineId,
@@ -94,7 +112,7 @@ export default function questions(state = initialState, action) {
           displayName: payload.user.displayName
         }
       };
-      const newState = {
+      var newState = {
         ...state,
         rooms: {
           ...state.rooms,

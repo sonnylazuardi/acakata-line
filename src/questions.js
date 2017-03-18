@@ -20,7 +20,6 @@ export default class Questions {
 
   randomize() {
     const state = this.store.getState();
-    console.log(state);
     const randInt = Math.floor(Math.random() * state.questions.length);
     const activeQuestion = { 
       ...state.questions[randInt],

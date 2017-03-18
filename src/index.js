@@ -83,5 +83,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     room.listHighscore({roomId: 'test', callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n ${highscores.map(user => (`${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
+  } else if (text == '/exit') {
+    room.removeUser({lineId: source.userId, roomId: 'test'});
   }
 });
