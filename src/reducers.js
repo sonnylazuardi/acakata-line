@@ -1,28 +1,8 @@
 import uuid from 'uuid';
+import questionList from './questionList';
 
 const initialState = {
-  questions: [
-    {
-      question: 'Ibukota negara Indonesia',
-      answer: 'JAKARTA',
-      score: 10
-    },
-    {
-      question: 'Masakan khas padang',
-      answer: 'RENDANG',
-      score: 10
-    },
-    {
-      question: 'Presiden Pertama Indonesia',
-      answer: 'SOEHARTO',
-      score: 10
-    },
-    {
-      question: 'Kota Pahlawan',
-      answer: 'SURABAYA',
-      score: 10
-    },
-  ],
+  questions: questionList,
   timer: 5,
   activeQuestion: {
     correctCounter: 0
@@ -100,7 +80,6 @@ export default function questions(state = initialState, action) {
           [payload.user.roomId]: updateRoom
         }
       }
-      console.log('ROOMS', newState.rooms);
       return newState;
     case 'ADD_USER':
       var updateRoom = {
