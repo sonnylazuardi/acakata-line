@@ -30,7 +30,8 @@
     "node-line-messaging-api": "^0.12.2",
     "nodemon": "^1.11.0",
     "redux": "^3.6.0",
-    "uuid": "^3.0.1"
+    "uuid": "^3.0.1",
+    "forever": "^0.15.3"
   },
   "ava": {
     "require": "babel-register"
