@@ -1,43 +1,64 @@
-
-const User = require('./users.js').default
+import uuid from 'uuid';
 
 export default class Rooms {
-  constructor() {
-    this.rooms = {}
+  constructor(store) {
+    this.store = store;
   }
 
-  createRooms() {
-    const roomName = this.generateRoomsName()
-    if (!this.rooms.hasOwnProperty('test')) {
-      this.rooms['test'] = []
-    }
-  }
-
-  addUser({ id, replyToken, roomName }) {
-    if(this.rooms[roomName]) {
-      this.rooms[roomName][id] = new User({ id, replyToken })
-      console.log(this.rooms[roomName])
-    }
-  }
-
-  generateRoomsName() {
-    return Math.random()
-  }
-
-  deleteRooms({ roomName }) {
-    delete this.rooms[roomName]
-  }
-
-  checkUserExist(roomName, id) {
-    return this.rooms[roomName].hasOwnProperty(id)
-  }
-
-  broadCast({source, roomName , message, callback}) {
-    Object.keys(this.rooms[roomName]).forEach((key) => {
-      if(source != key) {
-        const user = this.rooms[roomName][key]
-        callback(user)
+  createRoom(roomId) {
+    const store = this.store;
+    store.dispatch({
+      type: 'CREATE_ROOM',
+      payload: {
+        roomId
       }
+    });
+  }
+
+  addUser({ lineId, replyToken, roomId, displayName }) {
+    const store = this.store;
+    store.dispatch({
+      type: 'ADD_USER',
+      payload: {
+        user: {
+          lineId,
+          replyToken,
+          roomId,
+          displayName
+        }
+      }
+    });
+  }
+
+  // deleteRooms({ roomName }) {
+  //   delete this.rooms[roomName]
+  // }
+
+  // checkUserExist(roomName, id) {
+  //   return this.rooms[roomName].hasOwnProperty(id)
+  // }
+
+  broadCast({roomId, callback}) {
+    const state = this.store.getState();
+    Object.keys(state.rooms[roomId]).forEach((key) => {
+      const user = state.rooms[roomId][key];
+      // console.log('USER', user);
+      callback(user);
+    })
+  }
+
+  listHighscore({roomId, callback}) {
+    const state = this.store.getState();
+    const highscores = Object.keys(state.rooms[roomId]).map(key => {
+      const user = state.rooms[roomId][key];
+      return user;
+    }).sort((a, b) => {
+      return b.score - a.score;
+    });
+
+    Object.keys(state.rooms[roomId]).forEach((key) => {
+      const user = state.rooms[roomId][key];
+      callback({user, highscores});
     })
   }
 }

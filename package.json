@@ -28,7 +28,9 @@
     "babel-preset-stage-3": "^6.17.0",
     "eventemitter3": "^2.0.2",
     "node-line-messaging-api": "^0.12.2",
-    "nodemon": "^1.11.0"
+    "nodemon": "^1.11.0",
+    "redux": "^3.6.0",
+    "uuid": "^3.0.1"
   },
   "ava": {
     "require": "babel-register"
