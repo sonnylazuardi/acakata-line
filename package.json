@@ -40,5 +40,8 @@
     "presets": [
       "@ava/stage-4"
     ]
+  },
+  "engines": {
+    "node": "6.9.5"
   }
 }
