@@ -75,6 +75,16 @@ export default class Rooms {
     })
   }
 
+  onlineUser({roomId, callback}) {
+    const state = this.store.getState();
+    const users = Object.keys(state.rooms[roomId]).map(key => {
+      const user = state.rooms[roomId][key];
+      return user;
+    })
+    callback({users});
+    
+  }
+
   syncScore({database, lineId, roomId}) {
     const state = this.store.getState();
     const user = state.rooms[roomId][lineId];
