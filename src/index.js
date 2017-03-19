@@ -1,12 +1,23 @@
 import Rooms from './rooms'
 import Questions from './questions';
 
+import firebase from 'firebase-admin';
+
+var serviceAccount = require("./firebase");
+firebase.initializeApp(
+  {
+    credential: firebase.credential.cert(serviceAccount),
+    databaseURL: "https://acakkata-12bf7.firebaseio.com"
+  }
+);
+var database = firebase.database();
+
 const EventEmitter = require('eventemitter3')
 
 const Bot = require('node-line-messaging-api');
-const ID = `1501455661`
-const SECRET = `367d38f1f36d2b9c3de59437a88ddd23`
-const TOKEN = `8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=`
+const ID = `1506324098`
+const SECRET = `67cdf8ca5562c3b558c66d88115762c7`
+const TOKEN = `qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=`
 
 const PORT = process.env.PORT || 3002
 const bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: false } });
@@ -67,9 +78,17 @@ bot.on('follow', ({replyToken, source}) => {
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if (text == '/join') {
     room.createRoom('test');
+
     bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
-      console.log(displayName);
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
+      room.syncReducer({database, user: source, roomId: 'test'})
+      room.onlineUser({roomId: 'test', callback: ({users}) => {
+        if(users.length > 20) {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.length} users`).commit());
+        }else {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.map(user => (`${user.displayName}`)).join('\n')}`).commit());
+        }
+      }});
     });
   } else if (text == '/start') {
     questions.start();
@@ -84,6 +103,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n ${highscores.map(user => (`${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
   } else if (text == '/exit') {
+    room.syncScore({database, lineId: source.userId, roomId: 'test'})
     room.removeUser({lineId: source.userId, roomId: 'test'});
   }
 });
