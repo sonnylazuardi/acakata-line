@@ -78,10 +78,10 @@ bot.on('follow', ({replyToken, source}) => {
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if (text == '/join') {
     room.createRoom('test');
-    room.syncReducer({database, user: source, roomId: 'test'})
     bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
       console.log(displayName);
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
+      room.syncReducer({database, user: source, roomId: 'test'})
     });
   } else if (text == '/start') {
     questions.start();
