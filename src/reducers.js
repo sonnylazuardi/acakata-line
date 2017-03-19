@@ -99,6 +99,26 @@ export default function questions(state = initialState, action) {
         }
       }
       return newState;
+    case 'SYNC':
+      var updateRoom = {
+        ...state.rooms[payload.user.roomId],
+        [payload.user.lineId]: {
+          lineId: payload.user.lineId,
+          replyToken: payload.user.replyToken,
+          score: payload.user.score,
+          displayName: payload.user.displayName
+        }
+      };
+
+      var newState = {
+        ...state,
+        rooms: {
+          ...state.rooms,
+          [payload.user.roomId]: updateRoom
+        }
+      }
+      console.log(newState.rooms.test)
+      return newState;
     default:
       return state
   }
