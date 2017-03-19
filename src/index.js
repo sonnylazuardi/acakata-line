@@ -83,7 +83,11 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
       room.syncReducer({database, user: source, roomId: 'test'})
       room.onlineUser({roomId: 'test', callback: ({users}) => {
-        bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.map(user => (`${user.displayName}`)).join('\n')}`).commit());
+        if(users.length > 20) {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.length} users`).commit());
+        }else {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.map(user => (`${user.displayName}`)).join('\n')}`).commit());
+        }
       }});
     });
   } else if (text == '/start') {
