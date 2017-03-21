@@ -1,5 +1,4 @@
 import uuid from 'uuid';
-import ctrl from './userController';
 
 export default class Rooms {
   constructor(store) {
@@ -85,6 +84,11 @@ export default class Rooms {
     
   }
 
+  checkUserExist({roomId, lineId}) {
+    const state = this.store.getState();
+    return !!state.rooms[roomId] && !!state.rooms[roomId][lineId];
+  }
+
   syncScore({database, lineId, roomId}) {
     const state = this.store.getState();
     const user = state.rooms[roomId][lineId];
@@ -103,18 +107,20 @@ export default class Rooms {
     let result = null;
     database.ref('users/' + user.userId).once('value').then(function(snapshot) {
       result = snapshot.val();
-      store.dispatch({
-        type: 'SYNC',
-        payload: {
-          user: {
-            lineId: result.lineId,
-            replyToken: result.replyToken,
-            score: result.score,
-            roomId: roomId,
-            displayName: result.displayName
+      if (result) {
+        store.dispatch({
+          type: 'SYNC',
+          payload: {
+            user: {
+              lineId: result.lineId,
+              replyToken: result.replyToken,
+              score: result.score,
+              roomId: roomId,
+              displayName: result.displayName
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 }

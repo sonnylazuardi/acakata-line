@@ -91,6 +91,19 @@ function questions() {
         rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom))
       });
       return newState;
+    case 'SYNC':
+      var updateRoom = _extends({}, state.rooms[payload.user.roomId], _defineProperty({}, payload.user.lineId, {
+        lineId: payload.user.lineId,
+        replyToken: payload.user.replyToken,
+        score: payload.user.score,
+        displayName: payload.user.displayName
+      }));
+
+      var newState = _extends({}, state, {
+        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom))
+      });
+      console.log(newState.rooms.test);
+      return newState;
     default:
       return state;
   }

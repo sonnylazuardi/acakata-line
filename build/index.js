@@ -8,6 +8,10 @@ var _questions = require('./questions');
 
 var _questions2 = _interopRequireDefault(_questions);
 
+var _firebaseAdmin = require('firebase-admin');
+
+var _firebaseAdmin2 = _interopRequireDefault(_firebaseAdmin);
+
 var _reducers = require('./reducers');
 
 var _reducers2 = _interopRequireDefault(_reducers);
@@ -16,12 +20,16 @@ var _redux = require('redux');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var EventEmitter = require('eventemitter3');
-
+var serviceAccount = require("./firebase");
+_firebaseAdmin2.default.initializeApp({
+  credential: _firebaseAdmin2.default.credential.cert(serviceAccount),
+  databaseURL: "https://acakkata-12bf7.firebaseio.com"
+});
+var database = _firebaseAdmin2.default.database();
 var Bot = require('node-line-messaging-api');
-var ID = '1501455661';
-var SECRET = '367d38f1f36d2b9c3de59437a88ddd23';
-var TOKEN = '8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=';
+var ID = '1506324098';
+var SECRET = '67cdf8ca5562c3b558c66d88115762c7';
+var TOKEN = 'qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=';
 
 var PORT = process.env.PORT || 3002;
 var bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: false } });
@@ -89,30 +97,42 @@ bot.on('text', function (_ref3) {
 
   if (text == '/join') {
     room.createRoom('test');
+
     bot.getProfile(source[source.type + 'Id']).then(function (_ref4) {
       var displayName = _ref4.data.displayName;
 
-      console.log(displayName);
       room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
+      room.syncReducer({ database: database, user: source, roomId: 'test' });
+      room.onlineUser({ roomId: 'test', callback: function callback(_ref5) {
+          var users = _ref5.users;
+
+          if (users.length > 20) {
+            bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.length + ' users').commit());
+          } else {
+            bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.map(function (user) {
+              return '' + user.displayName;
+            }).join('\n')).commit());
+          }
+        } });
     });
   } else if (text == '/start') {
     questions.start();
     var timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
-  } else if (text.indexOf('/jawab ') != -1) {
-    var answerSplit = text.split('/jawab ');
-    var answerText = answerSplit[1];
-    questions.checkAnswer({ answerText: answerText, lineId: source.userId, roomId: 'test' });
   } else if (text == '/highscore') {
-    room.listHighscore({ roomId: 'test', callback: function callback(_ref5) {
-        var user = _ref5.user,
-            highscores = _ref5.highscores;
+    room.listHighscore({ roomId: 'test', callback: function callback(_ref6) {
+        var user = _ref6.user,
+            highscores = _ref6.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n ' + highscores.map(function (user) {
           return user.displayName + ' = ' + user.score;
         }).join('\n')).commit());
       } });
   } else if (text == '/exit') {
+    room.syncScore({ database: database, lineId: source.userId, roomId: 'test' });
     room.removeUser({ lineId: source.userId, roomId: 'test' });
+  } else if (room.checkUserExist({ roomId: 'test', lineId: source.userId })) {
+    var answerText = text;
+    questions.checkAnswer({ answerText: answerText, lineId: source.userId, roomId: 'test' });
   }
 });

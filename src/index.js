@@ -11,9 +11,6 @@ firebase.initializeApp(
   }
 );
 var database = firebase.database();
-
-const EventEmitter = require('eventemitter3')
-
 const Bot = require('node-line-messaging-api');
 const ID = `1506324098`
 const SECRET = `67cdf8ca5562c3b558c66d88115762c7`
@@ -94,10 +91,6 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     questions.start();
     const timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
-  } else if (text.indexOf('/jawab ') != -1) {
-    const answerSplit = text.split('/jawab ');
-    const answerText = answerSplit[1];
-    questions.checkAnswer({answerText, lineId: source.userId, roomId: 'test'});
   } else if (text == '/highscore') {
     room.listHighscore({roomId: 'test', callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n ${highscores.map(user => (`${user.displayName} = ${user.score}`)).join('\n')}`).commit());
@@ -105,5 +98,8 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/exit') {
     room.syncScore({database, lineId: source.userId, roomId: 'test'})
     room.removeUser({lineId: source.userId, roomId: 'test'});
+  } else if (room.checkUserExist({roomId: 'test', lineId: source.userId})) {
+    const answerText = text;
+    questions.checkAnswer({answerText, lineId: source.userId, roomId: 'test'});
   }
 });
