@@ -32,7 +32,15 @@ var SECRET = '67cdf8ca5562c3b558c66d88115762c7';
 var TOKEN = 'qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=';
 
 var PORT = process.env.PORT || 3002;
-var bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: false } });
+var bot = new Bot({
+  secret: SECRET,
+  token: TOKEN,
+  options: {
+    port: PORT,
+    tunnel: false,
+    verifySignature: true
+  }
+});
 
 var store = (0, _redux.createStore)(_reducers2.default);
 var questions = new _questions2.default(store);
@@ -74,37 +82,40 @@ store.subscribe(function () {
   }
 });
 
-bot.on('webhook', function (w) {
-  console.log('bot listens on port ' + w + '.');
+bot.on('webhook', function (_ref) {
+  var port = _ref.port,
+      endpoint = _ref.endpoint;
+
+  console.log('bot listens on port ' + port + '.');
 });
 
-bot.on('follow', function (_ref) {
-  var replyToken = _ref.replyToken,
-      source = _ref.source;
+bot.on('follow', function (_ref2) {
+  var replyToken = _ref2.replyToken,
+      source = _ref2.source;
 
-  bot.getProfile(source[source.type + 'Id']).then(function (_ref2) {
-    var displayName = _ref2.data.displayName;
+  bot.getProfile(source[source.type + 'Id']).then(function (_ref3) {
+    var displayName = _ref3.data.displayName;
 
     bot.replyMessage(replyToken, new Messages().addText('Selamat Datang di AcaKata, ' + displayName + '!').addText({ text: 'Main acakata seru dan menyenangkan (>.<) \n ' }).commit());
   });
 });
 
-bot.on('text', function (_ref3) {
-  var replyToken = _ref3.replyToken,
-      source = _ref3.source,
-      type = _ref3.source.type,
-      text = _ref3.message.text;
+bot.on('text', function (_ref4) {
+  var replyToken = _ref4.replyToken,
+      source = _ref4.source,
+      type = _ref4.source.type,
+      text = _ref4.message.text;
 
   if (text == '/join') {
     room.createRoom('test');
 
-    bot.getProfile(source[source.type + 'Id']).then(function (_ref4) {
-      var displayName = _ref4.data.displayName;
+    bot.getProfile(source[source.type + 'Id']).then(function (_ref5) {
+      var displayName = _ref5.data.displayName;
 
       room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
       room.syncReducer({ database: database, user: source, roomId: 'test' });
-      room.onlineUser({ roomId: 'test', callback: function callback(_ref5) {
-          var users = _ref5.users;
+      room.onlineUser({ roomId: 'test', callback: function callback(_ref6) {
+          var users = _ref6.users;
 
           if (users.length > 20) {
             bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.length + ' users').commit());
@@ -120,9 +131,9 @@ bot.on('text', function (_ref3) {
     var timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
   } else if (text == '/highscore') {
-    room.listHighscore({ roomId: 'test', callback: function callback(_ref6) {
-        var user = _ref6.user,
-            highscores = _ref6.highscores;
+    room.listHighscore({ roomId: 'test', callback: function callback(_ref7) {
+        var user = _ref7.user,
+            highscores = _ref7.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n ' + highscores.map(function (user) {
           return user.displayName + ' = ' + user.score;

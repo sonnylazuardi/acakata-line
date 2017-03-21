@@ -17,7 +17,15 @@ const SECRET = `67cdf8ca5562c3b558c66d88115762c7`
 const TOKEN = `qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=`
 
 const PORT = process.env.PORT || 3002
-const bot = new Bot(SECRET, TOKEN, { webhook: { port: PORT, ngrok: false } });
+const bot = new Bot({
+  secret: SECRET,
+  token: TOKEN,
+  options: {
+    port: PORT,
+    tunnel: false,
+    verifySignature: true
+  }
+});
 
 import reducers from './reducers';
 import {createStore} from 'redux';
@@ -62,8 +70,8 @@ store.subscribe(() => {
   }
 })
 
-bot.on('webhook', w => {
-  console.log(`bot listens on port ${w}.`)
+bot.on('webhook', ({port, endpoint}) => {
+  console.log(`bot listens on port ${port}.`)
 })
 
 bot.on('follow', ({replyToken, source}) => {
