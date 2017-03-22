@@ -89,15 +89,12 @@ bot.on('webhook', function (_ref) {
   console.log('bot listens on port ' + port + '.');
 });
 
-bot.on('follow', function (_ref2) {
-  var replyToken = _ref2.replyToken,
-      source = _ref2.source;
+bot.on('follow', function (event) {
+  bot.getProfileFromEvent(event).then(function (_ref2) {
+    var displayName = _ref2.displayName;
 
-  bot.getProfile(source[source.type + 'Id']).then(function (_ref3) {
-    var displayName = _ref3.data.displayName;
-
-    console.log(replyToken, displayName);
-    bot.replyMessage(replyToken, new Bot.Messages().addText('Halo ' + displayName + '! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 })
+    console.log(event.replyToken, displayName);
+    bot.replyMessage(event.replyToken, new Bot.Messages().addText('Halo ' + displayName + '! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 })
     // .addButtons({
     //   thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
     //   altText: '', 
@@ -120,22 +117,22 @@ bot.on('follow', function (_ref2) {
   });
 });
 
-bot.on('text', function (_ref4) {
-  var replyToken = _ref4.replyToken,
-      source = _ref4.source,
-      type = _ref4.source.type,
-      text = _ref4.message.text;
+bot.on('text', function (_ref3) {
+  var replyToken = _ref3.replyToken,
+      source = _ref3.source,
+      type = _ref3.source.type,
+      text = _ref3.message.text;
 
   if (text == '/join') {
     room.createRoom('test');
 
-    bot.getProfile(source[source.type + 'Id']).then(function (_ref5) {
-      var displayName = _ref5.data.displayName;
+    bot.getProfile(source[source.type + 'Id']).then(function (_ref4) {
+      var displayName = _ref4.data.displayName;
 
       room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
       room.syncReducer({ database: database, user: source, roomId: 'test' });
-      room.onlineUser({ roomId: 'test', callback: function callback(_ref6) {
-          var users = _ref6.users;
+      room.onlineUser({ roomId: 'test', callback: function callback(_ref5) {
+          var users = _ref5.users;
 
           if (users.length > 20) {
             bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.length + ' users').commit());
@@ -151,9 +148,9 @@ bot.on('text', function (_ref4) {
     var timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
   } else if (text == '/highscore') {
-    room.listHighscore({ roomId: 'test', callback: function callback(_ref7) {
-        var user = _ref7.user,
-            highscores = _ref7.highscores;
+    room.listHighscore({ roomId: 'test', callback: function callback(_ref6) {
+        var user = _ref6.user,
+            highscores = _ref6.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n ' + highscores.map(function (user) {
           return user.displayName + ' = ' + user.score;

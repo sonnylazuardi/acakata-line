@@ -74,10 +74,10 @@ bot.on('webhook', ({port, endpoint}) => {
   console.log(`bot listens on port ${port}.`)
 })
 
-bot.on('follow', ({replyToken, source}) => {
-  bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
-    console.log(replyToken, displayName);
-    bot.replyMessage(replyToken, new Bot.Messages().addText(`Halo ${displayName}! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
+bot.on('follow', (event) => {
+  bot.getProfileFromEvent(event).then(({displayName}) => {
+    console.log(event.replyToken, displayName);
+    bot.replyMessage(event.replyToken, new Bot.Messages().addText(`Halo ${displayName}! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
 
 Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!`)
       .addSticker({packageId: 1, stickerId: 406})
@@ -106,7 +106,6 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if (text == '/join') {
     room.createRoom('test');
-
     bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
       room.syncReducer({database, user: source, roomId: 'test'})
@@ -119,6 +118,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
       }});
     });
   } else if (text == '/start') {
+    room.createRoom('test');
     questions.start();
     const timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
