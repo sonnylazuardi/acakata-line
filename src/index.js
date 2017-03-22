@@ -37,7 +37,7 @@ store.subscribe(() => {
     const randomAnswer = state.activeQuestion.randomAnswer;
 
     room.broadCast({roomId: 'test', callback: (user) => {
-      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Pertanyaan: ${pertanyaan} \n\n ${randomAnswer}`).commit());
+      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Petunjuk: ${pertanyaan} \n\n ${randomAnswer}`).commit());
     }});
   }
 
@@ -68,7 +68,30 @@ bot.on('webhook', w => {
 
 bot.on('follow', ({replyToken, source}) => {
   bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
-    bot.replyMessage(replyToken, new Messages().addText(`Selamat Datang di AcaKata, ${displayName}!`).addText({text: 'Main acakata seru dan menyenangkan (>.<) \n '}).commit())
+    console.log(replyToken, displayName);
+    bot.replyMessage(replyToken, new Bot.Messages().addText(`Halo ${displayName}! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
+
+Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!`)
+      .addSticker({packageId: 1, stickerId: 406})
+      // .addButtons({
+      //   thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
+      //   altText: '', 
+      //   title: 'Acakata Menu', 
+      //   text: 'Mau mulai main?', 
+      //   // actions: [
+      //   //   {
+      //   //     type: 'message',
+      //   //     label: 'Mulai Battle',
+      //   //     text: '/battle'
+      //   //   },
+      //   //   {
+      //   //     type: 'message',
+      //   //     label: 'Cara Bermain',
+      //   //     text: '/help'
+      //   //   },
+      //   // ]
+      // })
+      .commit())
   })
 })
 
