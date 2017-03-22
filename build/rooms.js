@@ -10,9 +10,31 @@ var _uuid = require('uuid');
 
 var _uuid2 = _interopRequireDefault(_uuid);
 
+var _reselect = require('reselect');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var usersSelector = function usersSelector(state) {
+  return state.users;
+};
+var roomsSelector = function roomsSelector(state) {
+  return state.rooms;
+};
+var roomUserSelector = (0, _reselect.createSelector)(usersSelector, roomsSelector, function (users, rooms) {
+  var detailRooms = {};
+  console.log("**********");
+  console.log(users);
+  Object.keys(rooms).forEach(function (roomId) {
+    detailRooms[roomId] = {};
+    Object.keys(rooms[roomId]).forEach(function (userId) {
+      detailRooms[roomId][userId] = users[userId];
+    });
+  });
+  console.log(detailRooms);
+  return detailRooms;
+});
 
 var Rooms = function () {
   function Rooms(store) {
@@ -65,18 +87,27 @@ var Rooms = function () {
   }, {
     key: 'removeUser',
     value: function removeUser(_ref2) {
-      var lineId = _ref2.lineId,
-          roomId = _ref2.roomId;
+      var lineId = _ref2.lineId;
 
       var store = this.store;
       store.dispatch({
         type: 'REMOVE_USER',
         payload: {
           user: {
-            lineId: lineId,
-            roomId: roomId
+            lineId: lineId
           }
         }
+      });
+    }
+  }, {
+    key: 'broadCastAll',
+    value: function broadCastAll(callback) {
+      var state = this.store.getState();
+      Object.keys(state.rooms).forEach(function (roomId) {
+        Object.keys(state.rooms[roomId]).forEach(function (key) {
+          var user = state.rooms[roomId][key];
+          callback(user);
+        });
       });
     }
   }, {
@@ -94,19 +125,24 @@ var Rooms = function () {
   }, {
     key: 'listHighscore',
     value: function listHighscore(_ref4) {
-      var roomId = _ref4.roomId,
+      var userId = _ref4.userId,
           callback = _ref4.callback;
 
       var state = this.store.getState();
-      var highscores = Object.keys(state.rooms[roomId]).map(function (key) {
-        var user = state.rooms[roomId][key];
+      var detailRooms = roomUserSelector(state);
+      if (!state.users[userId] || !state.users[userId].activeRoomId) {
+        return;
+      }
+      var roomId = state.users[userId].activeRoomId;
+      var highscores = Object.keys(detailRooms[roomId]).map(function (key) {
+        var user = detailRooms[roomId][key];
         return user;
       }).sort(function (a, b) {
         return b.score - a.score;
       });
 
-      Object.keys(state.rooms[roomId]).forEach(function (key) {
-        var user = state.rooms[roomId][key];
+      Object.keys(detailRooms[roomId]).forEach(function (key) {
+        var user = detailRooms[roomId][key];
         callback({ user: user, highscores: highscores });
       });
     }
@@ -117,8 +153,9 @@ var Rooms = function () {
           callback = _ref5.callback;
 
       var state = this.store.getState();
-      var users = Object.keys(state.rooms[roomId]).map(function (key) {
-        var user = state.rooms[roomId][key];
+      var detailRooms = roomUserSelector(state);
+      var users = Object.keys(detailRooms[roomId]).map(function (key) {
+        var user = detailRooms[roomId][key];
         return user;
       });
       callback({ users: users });
@@ -126,51 +163,37 @@ var Rooms = function () {
   }, {
     key: 'checkUserExist',
     value: function checkUserExist(_ref6) {
-      var roomId = _ref6.roomId,
-          lineId = _ref6.lineId;
+      var lineId = _ref6.lineId;
 
       var state = this.store.getState();
-      return !!state.rooms[roomId] && !!state.rooms[roomId][lineId];
+
+      return state.users[lineId] && state.users[lineId].activeRoomId;
     }
   }, {
     key: 'syncScore',
     value: function syncScore(_ref7) {
-      var database = _ref7.database,
-          lineId = _ref7.lineId,
-          roomId = _ref7.roomId;
+      var database = _ref7.database;
 
       var state = this.store.getState();
-      var user = state.rooms[roomId][lineId];
-      database.ref('users/' + lineId).set({
-        score: user.score,
-        lineId: user.lineId,
-        displayName: user.displayName,
-        replyToken: user.replyToken
-      });
+      var user = state.users;
+      console.log(user);
+      database.ref('users/').set(user);
     }
   }, {
     key: 'syncReducer',
     value: function syncReducer(_ref8) {
-      var database = _ref8.database,
-          user = _ref8.user,
-          roomId = _ref8.roomId;
+      var database = _ref8.database;
 
       var store = this.store;
       var state = store.getState();
       var result = null;
-      database.ref('users/' + user.userId).once('value').then(function (snapshot) {
+      database.ref('users').once('value').then(function (snapshot) {
         result = snapshot.val();
         if (result) {
           store.dispatch({
             type: 'SYNC',
             payload: {
-              user: {
-                lineId: result.lineId,
-                replyToken: result.replyToken,
-                score: result.score,
-                roomId: roomId,
-                displayName: result.displayName
-              }
+              users: result
             }
           });
         }

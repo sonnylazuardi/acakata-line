@@ -8,7 +8,8 @@ const initialState = {
     correctCounter: 0
   },
   rooms: {},
-  answers: []
+  answers: [],
+  users: {},
 }
 
 export default function questions(state = initialState, action) {
@@ -48,36 +49,39 @@ export default function questions(state = initialState, action) {
           ...state.answers,
           {
             lineId: payload.user.lineId,
-            displayName: payload.user.displayName,
             addedScore: payload.answer.addedScore,
             answerText: payload.answer.text,
-            answerState: payload.answer.state
+            answerState: payload.answer.state,
+            roomId : payload.roomId,
+            displayName: payload.user.displayName
           }
         ],
-        rooms: {
-          ...state.rooms,
-          [payload.user.roomId]: {
-            ...state.rooms[payload.user.roomId],
-            [payload.user.lineId]: {
-              score: payload.user.score
-            }
+        users: {
+          ...state.users,
+          [payload.user.lineId]: {
+              ...state.users[payload.user.lineId],
+              score: payload.user.score,
           }
         }
       }
     case 'REMOVE_USER':
-      var updateRoom = Object.keys(state.rooms[payload.user.roomId]).filter(key => {
+      if(!state.users[payload.user.lineId] || !state.users[payload.user.lineId].activeRoomId) {
+        return state
+      }
+      var roomId = state.users[payload.user.lineId].activeRoomId
+      var updateRoom = Object.keys(state.rooms[roomId]).filter(key => {
         return key != payload.user.lineId;
       }).reduce((acc, key) => {
         return {
           ...acc,
-          [key]: state.rooms[payload.user.roomId][key]
+          [key]: state.rooms[roomId][key]
         };
       }, {});
       var newState = {
         ...state,
         rooms: {
           ...state.rooms,
-          [payload.user.roomId]: updateRoom
+          [roomId]: updateRoom
         }
       }
       return newState;
@@ -85,10 +89,7 @@ export default function questions(state = initialState, action) {
       var updateRoom = {
         ...state.rooms[payload.user.roomId],
         [payload.user.lineId]: {
-          lineId: payload.user.lineId,
-          replyToken: payload.user.replyToken,
-          score: 0,
-          displayName: payload.user.displayName
+          lineId: payload.user.lineId
         }
       };
       var newState = {
@@ -96,28 +97,25 @@ export default function questions(state = initialState, action) {
         rooms: {
           ...state.rooms,
           [payload.user.roomId]: updateRoom
+        },
+        users:{
+          ...state.users,
+          [payload.user.lineId]: {
+            lineId: payload.user.lineId,
+            replyToken: payload.user.replyToken,
+            score: 0,
+            displayName: payload.user.displayName,
+            activeRoomId: payload.user.roomId
+          }
         }
       }
       return newState;
     case 'SYNC':
-      var updateRoom = {
-        ...state.rooms[payload.user.roomId],
-        [payload.user.lineId]: {
-          lineId: payload.user.lineId,
-          replyToken: payload.user.replyToken,
-          score: payload.user.score,
-          displayName: payload.user.displayName
-        }
-      };
-
       var newState = {
         ...state,
-        rooms: {
-          ...state.rooms,
-          [payload.user.roomId]: updateRoom
-        }
+        users: payload.users
       }
-      console.log(newState.rooms.test)
+
       return newState;
     default:
       return state

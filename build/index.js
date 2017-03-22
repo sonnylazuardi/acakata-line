@@ -48,24 +48,34 @@ var room = new _rooms2.default(store);
 
 var questionId = null;
 var answersLength = 0;
+var currentUsers = null;
+
+// room.syncReducer({database})
+
 
 store.subscribe(function () {
   var state = store.getState();
+
+  if (currentUsers != state.users) {
+    // room.syncScore({database})
+  }
+
   if (questionId !== state.questionId) {
     questionId = state.questionId;
     var pertanyaan = state.activeQuestion.question;
     var randomAnswer = state.activeQuestion.randomAnswer;
 
-    room.broadCast({ roomId: 'test', callback: function callback(user) {
-        bot.pushMessage(user.lineId, new Bot.Messages().addText('Petunjuk: ' + pertanyaan + ' \n\n ' + randomAnswer).commit());
-      } });
+    room.broadCastAll(function (user) {
+      bot.pushMessage(user.lineId, new Bot.Messages().addText('Petunjuk: ' + pertanyaan + ' \n\n ' + randomAnswer).commit());
+    });
   }
 
   if (state.answers.length != answersLength) {
     answersLength = state.answers.length;
-    room.broadCast({ roomId: 'test', callback: function callback(user) {
-        var lastAnswer = state.answers[answersLength - 1];
-        if (lastAnswer) {
+    var lastAnswer = state.answers[answersLength - 1];
+    console.log(lastAnswer);
+    if (lastAnswer) {
+      room.broadCast({ roomId: lastAnswer.roomId, callback: function callback(user) {
           if (lastAnswer.answerState) {
             if (lastAnswer.addedScore == 10) {
               bot.pushMessage(user.lineId, new Bot.Messages().addText(lastAnswer.displayName + ' menjawab dengan benar (+10)').commit());
@@ -78,7 +88,8 @@ store.subscribe(function () {
             bot.pushMessage(user.lineId, new Bot.Messages().addText(lastAnswer.displayName + ' menjawab salah').commit());
           }
         }
-      } });
+      });
+    }
   }
 });
 
@@ -97,9 +108,9 @@ bot.on('follow', function (event) {
     bot.replyMessage(event.replyToken, new Bot.Messages().addText('Halo ' + displayName + '! Kenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 })
     // .addButtons({
     //   thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
-    //   altText: '', 
-    //   title: 'Acakata Menu', 
-    //   text: 'Mau mulai main?', 
+    //   altText: '',
+    //   title: 'Acakata Menu',
+    //   text: 'Mau mulai main?',
     //   // actions: [
     //   //   {
     //   //     type: 'message',
@@ -125,12 +136,11 @@ bot.on('text', function (_ref3) {
 
   if (text == '/join') {
     room.createRoom('test');
-
     bot.getProfile(source[source.type + 'Id']).then(function (_ref4) {
-      var displayName = _ref4.data.displayName;
+      var displayName = _ref4.displayName;
 
       room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
-      room.syncReducer({ database: database, user: source, roomId: 'test' });
+
       room.onlineUser({ roomId: 'test', callback: function callback(_ref5) {
           var users = _ref5.users;
 
@@ -143,24 +153,47 @@ bot.on('text', function (_ref3) {
           }
         } });
     });
+  } else if (text.indexOf('/duel') > -1) {
+    var nameUser = text.split(' ')[1];
+    bot.getProfile(source[source.type + 'Id']).then(function (_ref6) {
+      var displayName = _ref6.displayName;
+
+      var arrayName = [nameUser, displayName].sort();
+      room.createRoom(arrayName[0] + '-' + arrayName[1]);
+      console.log(arrayName[0] + '-' + arrayName[1]);
+      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: arrayName[0] + '-' + arrayName[1] });
+
+      room.onlineUser({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(_ref7) {
+          var users = _ref7.users;
+
+          if (users.length > 20) {
+            bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.length + ' users').commit());
+          } else {
+            bot.pushMessage(source.userId, new Bot.Messages().addText('Online User: \n\n ' + users.map(function (user) {
+              return '' + user.displayName;
+            }).join('\n')).commit());
+          }
+        } });
+    });
   } else if (text == '/start') {
+    room.createRoom('test');
     questions.start();
     var timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
   } else if (text == '/highscore') {
-    room.listHighscore({ roomId: 'test', callback: function callback(_ref6) {
-        var user = _ref6.user,
-            highscores = _ref6.highscores;
+    room.listHighscore({ userId: source.userId, callback: function callback(_ref8) {
+        var user = _ref8.user,
+            highscores = _ref8.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n ' + highscores.map(function (user) {
           return user.displayName + ' = ' + user.score;
         }).join('\n')).commit());
       } });
   } else if (text == '/exit') {
-    room.syncScore({ database: database, lineId: source.userId, roomId: 'test' });
-    room.removeUser({ lineId: source.userId, roomId: 'test' });
-  } else if (room.checkUserExist({ roomId: 'test', lineId: source.userId })) {
+    room.removeUser({ lineId: source.userId });
+  } else if (room.checkUserExist({ lineId: source.userId })) {
     var answerText = text;
-    questions.checkAnswer({ answerText: answerText, lineId: source.userId, roomId: 'test' });
+
+    questions.checkAnswer({ answerText: answerText, lineId: source.userId });
   }
 });

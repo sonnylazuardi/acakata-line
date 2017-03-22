@@ -29,7 +29,8 @@ var initialState = {
     correctCounter: 0
   },
   rooms: {},
-  answers: []
+  answers: [],
+  users: {}
 };
 
 function questions() {
@@ -61,48 +62,50 @@ function questions() {
         }),
         answers: [].concat(_toConsumableArray(state.answers), [{
           lineId: payload.user.lineId,
-          displayName: payload.user.displayName,
           addedScore: payload.answer.addedScore,
           answerText: payload.answer.text,
-          answerState: payload.answer.state
+          answerState: payload.answer.state,
+          roomId: payload.roomId,
+          displayName: payload.user.displayName
         }]),
-        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, _extends({}, state.rooms[payload.user.roomId], _defineProperty({}, payload.user.lineId, {
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
           score: payload.user.score
-        }))))
+        })))
       });
     case 'REMOVE_USER':
-      var updateRoom = Object.keys(state.rooms[payload.user.roomId]).filter(function (key) {
+      if (!state.users[payload.user.lineId] || !state.users[payload.user.lineId].activeRoomId) {
+        return state;
+      }
+      var roomId = state.users[payload.user.lineId].activeRoomId;
+      var updateRoom = Object.keys(state.rooms[roomId]).filter(function (key) {
         return key != payload.user.lineId;
       }).reduce(function (acc, key) {
-        return _extends({}, acc, _defineProperty({}, key, state.rooms[payload.user.roomId][key]));
+        return _extends({}, acc, _defineProperty({}, key, state.rooms[roomId][key]));
       }, {});
       var newState = _extends({}, state, {
-        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom))
+        rooms: _extends({}, state.rooms, _defineProperty({}, roomId, updateRoom))
       });
       return newState;
     case 'ADD_USER':
       var updateRoom = _extends({}, state.rooms[payload.user.roomId], _defineProperty({}, payload.user.lineId, {
-        lineId: payload.user.lineId,
-        replyToken: payload.user.replyToken,
-        score: 0,
-        displayName: payload.user.displayName
+        lineId: payload.user.lineId
       }));
       var newState = _extends({}, state, {
-        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom))
+        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom)),
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, {
+          lineId: payload.user.lineId,
+          replyToken: payload.user.replyToken,
+          score: 0,
+          displayName: payload.user.displayName,
+          activeRoomId: payload.user.roomId
+        }))
       });
       return newState;
     case 'SYNC':
-      var updateRoom = _extends({}, state.rooms[payload.user.roomId], _defineProperty({}, payload.user.lineId, {
-        lineId: payload.user.lineId,
-        replyToken: payload.user.replyToken,
-        score: payload.user.score,
-        displayName: payload.user.displayName
-      }));
-
       var newState = _extends({}, state, {
-        rooms: _extends({}, state.rooms, _defineProperty({}, payload.user.roomId, updateRoom))
+        users: payload.users
       });
-      console.log(newState.rooms.test);
+
       return newState;
     default:
       return state;

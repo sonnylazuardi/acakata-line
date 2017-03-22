@@ -1,4 +1,26 @@
 import uuid from 'uuid';
+import { createSelector } from 'reselect'
+
+const usersSelector = state => state.users
+const roomsSelector = state => state.rooms
+const roomUserSelector = createSelector(
+  usersSelector,
+  roomsSelector,
+  (users, rooms) => {
+    let detailRooms = {}
+    console.log("**********")
+    console.log(users)
+    Object.keys(rooms).forEach((roomId) => {
+      detailRooms[roomId] = {}
+      Object.keys(rooms[roomId]).forEach((userId) => {
+        detailRooms[roomId][userId]= users[userId]
+
+      })
+    })
+    console.log(detailRooms)
+    return detailRooms
+  }
+)
 
 export default class Rooms {
   constructor(store) {
@@ -38,19 +60,28 @@ export default class Rooms {
   //   return this.rooms[roomName].hasOwnProperty(id)
   // }
 
-  removeUser({ lineId, roomId }) {
+  removeUser({ lineId }) {
     const store = this.store;
     store.dispatch({
       type: 'REMOVE_USER',
       payload: {
         user: {
-          lineId,
-          roomId
+          lineId
         }
       }
     });
   }
 
+  broadCastAll(callback) {
+    const state = this.store.getState();
+    Object.keys(state.rooms).forEach((roomId) => {
+      Object.keys(state.rooms[roomId]).forEach((key) => {
+        const user = state.rooms[roomId][key];
+        callback(user);
+      })
+    })
+
+  }
   broadCast({roomId, callback}) {
     const state = this.store.getState();
     Object.keys(state.rooms[roomId]).forEach((key) => {
@@ -59,65 +90,61 @@ export default class Rooms {
     })
   }
 
-  listHighscore({roomId, callback}) {
+  listHighscore({userId, callback}) {
     const state = this.store.getState();
-    const highscores = Object.keys(state.rooms[roomId]).map(key => {
-      const user = state.rooms[roomId][key];
+    const detailRooms = roomUserSelector(state)
+    if(!state.users[userId] || !state.users[userId].activeRoomId) {
+      return;
+    }
+    const roomId = state.users[userId].activeRoomId
+    const highscores = Object.keys(detailRooms[roomId]).map(key => {
+      const user = detailRooms[roomId][key];
       return user;
     }).sort((a, b) => {
       return b.score - a.score;
     });
 
-    Object.keys(state.rooms[roomId]).forEach((key) => {
-      const user = state.rooms[roomId][key];
+    Object.keys(detailRooms[roomId]).forEach((key) => {
+      const user = detailRooms[roomId][key];
       callback({user, highscores});
     })
   }
 
   onlineUser({roomId, callback}) {
     const state = this.store.getState();
-    const users = Object.keys(state.rooms[roomId]).map(key => {
-      const user = state.rooms[roomId][key];
+    const detailRooms = roomUserSelector(state)
+    const users = Object.keys(detailRooms[roomId]).map(key => {
+      const user = detailRooms[roomId][key];
       return user;
     })
     callback({users});
-    
   }
 
-  checkUserExist({roomId, lineId}) {
+  checkUserExist({lineId}) {
     const state = this.store.getState();
-    return !!state.rooms[roomId] && !!state.rooms[roomId][lineId];
+
+    return state.users[lineId] && state.users[lineId].activeRoomId;
   }
 
-  syncScore({database, lineId, roomId}) {
+  syncScore({database}) {
     const state = this.store.getState();
-    const user = state.rooms[roomId][lineId];
-    database.ref('users/' + lineId).set({
-      score: user.score,
-      lineId: user.lineId,
-      displayName : user.displayName,
-      replyToken: user.replyToken
-    });
+    const user = state.users;
+    console.log(user)
+    database.ref('users/').set(user);
 
   }
 
-  syncReducer({database, user, roomId}) {
+  syncReducer({database}) {
     const store = this.store
     const state = store.getState();
     let result = null;
-    database.ref('users/' + user.userId).once('value').then(function(snapshot) {
+    database.ref('users').once('value').then(function(snapshot) {
       result = snapshot.val();
       if (result) {
         store.dispatch({
           type: 'SYNC',
           payload: {
-            user: {
-              lineId: result.lineId,
-              replyToken: result.replyToken,
-              score: result.score,
-              roomId: roomId,
-              displayName: result.displayName
-            }
+            users: result
           }
         });
       }

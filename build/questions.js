@@ -83,13 +83,16 @@ var Questions = function () {
     key: "checkAnswer",
     value: function checkAnswer(_ref) {
       var answerText = _ref.answerText,
-          lineId = _ref.lineId,
-          roomId = _ref.roomId;
+          lineId = _ref.lineId;
 
       var store = this.store;
       var state = store.getState();
-      var currentUser = state.rooms[roomId][lineId];
-
+      var currentUser = state.users[lineId];
+      if (!currentUser || !currentUser.activeRoomId) {
+        return;
+      }
+      var roomId = currentUser.activeRoomId;
+      console.log(state.users);
       console.log('CHECK ANSWER', state.activeQuestion);
 
       var correctCounter = state.activeQuestion.correctCounter;
@@ -103,7 +106,9 @@ var Questions = function () {
       });
 
       if (myCurrentAnswer.length > 0) return;
-
+      if (!state.activeQuestion.answer) {
+        return;
+      }
       if (state.activeQuestion.answer.toLowerCase() == answerText.toLowerCase()) {
         correctCounter++;
         switch (correctCounter) {
@@ -124,12 +129,12 @@ var Questions = function () {
       } else {
         answer.state = false;
       }
-
       store.dispatch({
         type: 'ANSWER',
         payload: {
           answer: answer,
           user: currentUser,
+          roomId: roomId,
           correctCounter: correctCounter
         }
       });

@@ -36,24 +36,35 @@ const room = new Rooms(store);
 
 let questionId = null;
 let answersLength = 0;
+let currentUsers = null;
+
+// room.syncReducer({database})
+
+
 
 store.subscribe(() => {
   const state = store.getState();
+
+  if (currentUsers != state.users) {
+    // room.syncScore({database})
+  }
+
   if (questionId !== state.questionId) {
     questionId = state.questionId;
     const pertanyaan = state.activeQuestion.question;
     const randomAnswer = state.activeQuestion.randomAnswer;
 
-    room.broadCast({roomId: 'test', callback: (user) => {
+    room.broadCastAll((user) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Petunjuk: ${pertanyaan} \n\n ${randomAnswer}`).commit());
-    }});
+    });
   }
 
   if (state.answers.length != answersLength) {
     answersLength = state.answers.length;
-    room.broadCast({roomId: 'test', callback: (user) => {
-      const lastAnswer = state.answers[answersLength - 1];
-      if (lastAnswer) {
+    const lastAnswer = state.answers[answersLength - 1];
+    console.log(lastAnswer)
+    if (lastAnswer) {
+      room.broadCast({roomId: lastAnswer.roomId, callback: (user) => {
         if (lastAnswer.answerState) {
           if (lastAnswer.addedScore == 10) {
             bot.pushMessage(user.lineId, new Bot.Messages().addText(`${lastAnswer.displayName} menjawab dengan benar (+10)`).commit());
@@ -66,7 +77,8 @@ store.subscribe(() => {
           bot.pushMessage(user.lineId, new Bot.Messages().addText(`${lastAnswer.displayName} menjawab salah`).commit());
         }
       }
-    }});
+      });
+    }
   }
 })
 
@@ -83,9 +95,9 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
       .addSticker({packageId: 1, stickerId: 406})
       // .addButtons({
       //   thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
-      //   altText: '', 
-      //   title: 'Acakata Menu', 
-      //   text: 'Mau mulai main?', 
+      //   altText: '',
+      //   title: 'Acakata Menu',
+      //   text: 'Mau mulai main?',
       //   // actions: [
       //   //   {
       //   //     type: 'message',
@@ -106,9 +118,9 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if (text == '/join') {
     room.createRoom('test');
-    bot.getProfile(source[`${source.type}Id`]).then(({data: {displayName}}) => {
+    bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
-      room.syncReducer({database, user: source, roomId: 'test'})
+
       room.onlineUser({roomId: 'test', callback: ({users}) => {
         if(users.length > 20) {
           bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.length} users`).commit());
@@ -117,20 +129,37 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
         }
       }});
     });
-  } else if (text == '/start') {
+  }else if (text.indexOf('/duel') > -1) {
+    const nameUser = text.split(' ')[1]
+    bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
+      const arrayName = [nameUser, displayName].sort()
+      room.createRoom(`${arrayName[0]}-${arrayName[1]}`);
+      console.log(`${arrayName[0]}-${arrayName[1]}`)
+      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: `${arrayName[0]}-${arrayName[1]}`})
+
+      room.onlineUser({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: ({users}) => {
+        if(users.length > 20) {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.length} users`).commit());
+        }else {
+          bot.pushMessage(source.userId, new Bot.Messages().addText(`Online User: \n\n ${users.map(user => (`${user.displayName}`)).join('\n')}`).commit());
+        }
+      }});
+    });
+  }
+  else if (text == '/start') {
     room.createRoom('test');
     questions.start();
     const timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
   } else if (text == '/highscore') {
-    room.listHighscore({roomId: 'test', callback: ({user, highscores}) => {
+    room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n ${highscores.map(user => (`${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
   } else if (text == '/exit') {
-    room.syncScore({database, lineId: source.userId, roomId: 'test'})
-    room.removeUser({lineId: source.userId, roomId: 'test'});
-  } else if (room.checkUserExist({roomId: 'test', lineId: source.userId})) {
+    room.removeUser({lineId: source.userId});
+  } else if (room.checkUserExist({lineId: source.userId})) {
     const answerText = text;
-    questions.checkAnswer({answerText, lineId: source.userId, roomId: 'test'});
+
+    questions.checkAnswer({answerText, lineId: source.userId});
   }
 });

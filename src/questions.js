@@ -21,7 +21,7 @@ export default class Questions {
   randomize() {
     const state = this.store.getState();
     const randInt = Math.floor(Math.random() * state.questions.length);
-    const activeQuestion = { 
+    const activeQuestion = {
       ...state.questions[randInt],
       randomAnswer: this.shuffle(state.questions[randInt].answer)
     };
@@ -60,11 +60,15 @@ export default class Questions {
     return state.timer;
   }
 
-  checkAnswer({answerText, lineId, roomId}) {
+  checkAnswer({answerText, lineId}) {
     const store = this.store;
     const state = store.getState();
-    let currentUser = state.rooms[roomId][lineId];
-
+    let currentUser = state.users[lineId];
+    if(!currentUser || !currentUser.activeRoomId) {
+      return
+    }
+    let roomId = currentUser.activeRoomId
+    console.log(state.users)
     console.log('CHECK ANSWER', state.activeQuestion);
 
     let correctCounter = state.activeQuestion.correctCounter;
@@ -78,7 +82,9 @@ export default class Questions {
     });
 
     if (myCurrentAnswer.length > 0) return;
-
+    if (!state.activeQuestion.answer) {
+      return;
+    }
     if (state.activeQuestion.answer.toLowerCase() == answerText.toLowerCase()) {
       correctCounter++;
       switch (correctCounter) {
@@ -99,12 +105,12 @@ export default class Questions {
     } else {
       answer.state = false;
     }
-
     store.dispatch({
       type: 'ANSWER',
       payload: {
         answer: answer,
         user: currentUser,
+        roomId,
         correctCounter: correctCounter
       }
     })
@@ -163,4 +169,3 @@ export default class Questions {
 //   - score
 //     > High score
 //     > score dia skr
-
