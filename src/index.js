@@ -38,7 +38,7 @@ let questionId = null;
 let answersLength = 0;
 let currentUsers = null;
 
-// room.syncReducer({database})
+room.syncReducer({database})
 
 
 
@@ -46,7 +46,8 @@ store.subscribe(() => {
   const state = store.getState();
 
   if (currentUsers != state.users) {
-    // room.syncScore({database})
+    currentUsers = state.users
+    room.syncScore({database})
   }
 
   if (questionId !== state.questionId) {

@@ -50,14 +50,14 @@ var questionId = null;
 var answersLength = 0;
 var currentUsers = null;
 
-// room.syncReducer({database})
-
+room.syncReducer({ database: database });
 
 store.subscribe(function () {
   var state = store.getState();
 
   if (currentUsers != state.users) {
-    // room.syncScore({database})
+    currentUsers = state.users;
+    room.syncScore({ database: database });
   }
 
   if (questionId !== state.questionId) {

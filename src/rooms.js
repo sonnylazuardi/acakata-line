@@ -93,7 +93,18 @@ export default class Rooms {
   listHighscore({userId, callback}) {
     const state = this.store.getState();
     const detailRooms = roomUserSelector(state)
+    console.log(state.users[userId])
     if(!state.users[userId] || !state.users[userId].activeRoomId) {
+
+
+      const high = Object.keys(state.users).map((key) => {
+        return state.users[key]
+      }).sort((a,b) => {
+        return b.score - a.score;
+      })
+
+
+      callback({user:{lineId:userId}, highscores:high});
       return;
     }
     const roomId = state.users[userId].activeRoomId

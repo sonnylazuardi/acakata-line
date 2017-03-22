@@ -95,7 +95,7 @@ function questions() {
         users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, {
           lineId: payload.user.lineId,
           replyToken: payload.user.replyToken,
-          score: 0,
+          score: state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
           displayName: payload.user.displayName,
           activeRoomId: payload.user.roomId
         }))

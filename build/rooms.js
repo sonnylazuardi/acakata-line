@@ -130,7 +130,16 @@ var Rooms = function () {
 
       var state = this.store.getState();
       var detailRooms = roomUserSelector(state);
+      console.log(state.users[userId]);
       if (!state.users[userId] || !state.users[userId].activeRoomId) {
+
+        var high = Object.keys(state.users).map(function (key) {
+          return state.users[key];
+        }).sort(function (a, b) {
+          return b.score - a.score;
+        });
+
+        callback({ user: { lineId: userId }, highscores: high });
         return;
       }
       var roomId = state.users[userId].activeRoomId;
