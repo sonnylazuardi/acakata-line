@@ -20,8 +20,8 @@ var Questions = function () {
   }
 
   _createClass(Questions, [{
-    key: "shuffle",
-    value: function shuffle(str) {
+    key: "shuffleWord",
+    value: function shuffleWord(str) {
       var a = str.split(""),
           n = a.length;
 
@@ -32,6 +32,20 @@ var Questions = function () {
         a[j] = tmp;
       }
       return a.join("");
+    }
+  }, {
+    key: "shuffle",
+    value: function shuffle(str) {
+      var _this = this;
+
+      var splitStr = str.split(' ');
+      if (splitStr.length > 1) {
+        return splitStr.map(function (currentStr) {
+          return _this.shuffleWord(currentStr);
+        }).join(' ');
+      } else {
+        return this.shuffleWord(str);
+      }
     }
   }, {
     key: "randomize",
@@ -46,7 +60,7 @@ var Questions = function () {
   }, {
     key: "start",
     value: function start() {
-      var _this = this;
+      var _this2 = this;
 
       var store = this.store;
       if (!this.questionTimeout) {
@@ -55,11 +69,11 @@ var Questions = function () {
           var state = store.getState();
           var nextTimer = state.timer - 1;
           if (nextTimer < 0) {
-            nextTimer = _this.timerCount;
+            nextTimer = _this2.timerCount;
             store.dispatch({
               type: 'CHANGE_ACTIVE_QUESTION',
               payload: {
-                activeQuestion: _this.randomize()
+                activeQuestion: _this2.randomize()
               }
             });
           }

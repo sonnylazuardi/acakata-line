@@ -87,11 +87,54 @@ database.ref('updates').on('child_added', function (snapshot) {
   }
 });
 
+// sync questions
+// const stateQuestions = store.getState().questions;
+// let resultQuestions = {};
+// stateQuestions.forEach((question, i) => {
+//   resultQuestions[i] = question;
+// });
+// database.ref('questions/').set(resultQuestions);
+
+if (env == 'production') {
+  database.ref('questions').once('value').then(function (snapshot) {
+    var result = snapshot.val();
+    if (result) {
+      var resultQuestions = [];
+      Object.keys(result || {}).forEach(function (key) {
+        resultQuestions.push(result[key]);
+      });
+      store.dispatch({
+        type: 'SYNC_QUESTIONS',
+        payload: {
+          questions: resultQuestions
+        }
+      });
+    }
+  });
+} else {
+  database.ref('questionbaru').once('value').then(function (snapshot) {
+    var result = snapshot.val();
+    if (result) {
+      var resultQuestions = [];
+      Object.keys(result || {}).forEach(function (key) {
+        resultQuestions.push(result[key]);
+      });
+      store.dispatch({
+        type: 'SYNC_QUESTIONS',
+        payload: {
+          questions: resultQuestions
+        }
+      });
+    }
+  });
+}
+
 store.subscribe(function () {
   var state = store.getState();
 
-  if (currentUsers != state.users && Object.keys(state.users).length > 0) {
+  if (currentUsers != state.users && Object.keys(state.users || {}).length > 0) {
     currentUsers = state.users;
+    console.log('SYNC to FIREBASE');
     room.syncScore({ database: database });
   }
 
@@ -270,8 +313,16 @@ bot.on('text', function (_ref4) {
 
       var arrayName = [_nameUser, displayName].sort();
       room.createRoom(arrayName[0] + '-' + arrayName[1]);
-      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: arrayName[0] + '-' + arrayName[1] });
 
+      var state = store.getState();
+      var currentUser = state.users[source.userId];
+
+      if (currentUser && currentUser.activeRoomId == arrayName[0] + '-' + arrayName[1]) {
+        console.log('already in room');
+        return;
+      }
+      room.removeUser({ lineId: source.userId });
+      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: arrayName[0] + '-' + arrayName[1] });
       room.onlineUser({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(_ref9) {
           var users = _ref9.users;
 

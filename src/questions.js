@@ -5,7 +5,7 @@ export default class Questions {
     this.timerCount = 30;
   }
 
-  shuffle(str) {
+  shuffleWord(str) {
     var a = str.split(""),
         n = a.length;
 
@@ -16,6 +16,15 @@ export default class Questions {
         a[j] = tmp;
     }
     return a.join("");
+  }
+
+  shuffle(str) {
+    var splitStr = str.split(' ');
+    if (splitStr.length > 1) {
+      return splitStr.map(currentStr => this.shuffleWord(currentStr)).join(' ');
+    } else {
+      return this.shuffleWord(str);
+    }
   }
 
   randomize() {

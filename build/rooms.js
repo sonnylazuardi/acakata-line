@@ -124,7 +124,7 @@ var Rooms = function () {
     value: function broadCastAll(callback) {
       var state = this.store.getState();
       Object.keys(state.rooms || {}).forEach(function (roomId) {
-        Object.keys(state.rooms[roomId]).forEach(function (key) {
+        Object.keys(state.rooms[roomId] || {}).forEach(function (key) {
           var user = state.rooms[roomId][key];
           callback(user);
         });
@@ -157,7 +157,7 @@ var Rooms = function () {
           callback = _ref6.callback;
 
       var state = this.store.getState();
-      Object.keys(state.rooms[roomId]).forEach(function (key) {
+      Object.keys(state.rooms[roomId] || {}).forEach(function (key) {
         var user = state.rooms[roomId][key];
         callback(user);
       });
@@ -189,7 +189,7 @@ var Rooms = function () {
     value: function broadCastAnswerState(callback) {
       var state = this.store.getState();
       Object.keys(state.rooms || {}).forEach(function (roomId) {
-        Object.keys(state.rooms[roomId]).forEach(function (key) {
+        Object.keys(state.rooms[roomId] || {}).forEach(function (key) {
           var user = state.rooms[roomId][key];
           var answerByUser = state.answers.filter(function (answer) {
             return answer.lineId == user.lineId;
@@ -253,7 +253,14 @@ var Rooms = function () {
 
       var state = this.store.getState();
       var user = state.users;
-      database.ref('users/').set(user);
+      var env = process.env.NODE_ENV || 'development';
+      if (Object.keys(user || {}).length > 0) {
+        if (env == 'production') {
+          database.ref('users/').set(user);
+        } else {
+          database.ref('userbaru/').set(user);
+        }
+      }
     }
   }, {
     key: 'syncReducer',
@@ -263,17 +270,33 @@ var Rooms = function () {
       var store = this.store;
       var state = store.getState();
       var result = null;
-      database.ref('users').once('value').then(function (snapshot) {
-        result = snapshot.val();
-        if (result) {
-          store.dispatch({
-            type: 'SYNC',
-            payload: {
-              users: result
-            }
-          });
-        }
-      });
+
+      var env = process.env.NODE_ENV || 'development';
+      if (env == 'production') {
+        database.ref('users').once('value').then(function (snapshot) {
+          result = snapshot.val();
+          if (result) {
+            store.dispatch({
+              type: 'SYNC',
+              payload: {
+                users: result
+              }
+            });
+          }
+        });
+      } else {
+        database.ref('userbaru').once('value').then(function (snapshot) {
+          result = snapshot.val();
+          if (result) {
+            store.dispatch({
+              type: 'SYNC',
+              payload: {
+                users: result
+              }
+            });
+          }
+        });
+      }
     }
   }]);
 

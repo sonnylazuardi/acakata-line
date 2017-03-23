@@ -140,6 +140,11 @@ export default function questions(state = initialState, action) {
           }
         }
       };
+    case 'SYNC_QUESTIONS':
+      return {
+        ...state,
+        questions: payload.questions
+      }
     case 'SYNC':
       var newState = {
         ...state,

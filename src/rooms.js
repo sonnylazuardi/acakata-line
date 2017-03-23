@@ -89,7 +89,7 @@ export default class Rooms {
   broadCastAll(callback) {
     const state = this.store.getState();
     Object.keys(state.rooms || {}).forEach((roomId) => {
-      Object.keys(state.rooms[roomId]).forEach((key) => {
+      Object.keys(state.rooms[roomId] || {}).forEach((key) => {
         const user = state.rooms[roomId][key];
         callback(user);
       })
@@ -115,7 +115,7 @@ export default class Rooms {
 
   broadCast({roomId, callback}) {
     const state = this.store.getState();
-    Object.keys(state.rooms[roomId]).forEach((key) => {
+    Object.keys(state.rooms[roomId] || {}).forEach((key) => {
       const user = state.rooms[roomId][key];
       callback(user);
     })
@@ -142,7 +142,7 @@ export default class Rooms {
   broadCastAnswerState(callback) {
     const state = this.store.getState();
     Object.keys(state.rooms || {}).forEach((roomId) => {
-      Object.keys(state.rooms[roomId]).forEach((key) => {
+      Object.keys(state.rooms[roomId] || {}).forEach((key) => {
         const user = state.rooms[roomId][key];
         const answerByUser = state.answers.filter(answer => answer.lineId == user.lineId);
         const correctAnswerByUser = state.answers.filter(answer => answer.lineId == user.lineId && answer.answerState)[0];
@@ -188,24 +188,46 @@ export default class Rooms {
   syncScore({database}) {
     const state = this.store.getState();
     const user = state.users;
-    database.ref('users/').set(user);
-
+    const env = process.env.NODE_ENV || 'development';
+    if (Object.keys(user || {}).length > 0) {
+      if (env == 'production') {
+        database.ref('users/').set(user);
+      } else {
+        database.ref('userbaru/').set(user);
+      }
+    }
   }
 
   syncReducer({database}) {
     const store = this.store
     const state = store.getState();
     let result = null;
-    database.ref('users').once('value').then(function(snapshot) {
-      result = snapshot.val();
-      if (result) {
-        store.dispatch({
-          type: 'SYNC',
-          payload: {
-            users: result
-          }
-        });
-      }
-    });
+
+    const env = process.env.NODE_ENV || 'development';
+    if (env == 'production') {
+      database.ref('users').once('value').then(function(snapshot) {
+        result = snapshot.val();
+        if (result) {
+          store.dispatch({
+            type: 'SYNC',
+            payload: {
+              users: result
+            }
+          });
+        }
+      });
+    } else {
+      database.ref('userbaru').once('value').then(function(snapshot) {
+        result = snapshot.val();
+        if (result) {
+          store.dispatch({
+            type: 'SYNC',
+            payload: {
+              users: result
+            }
+          });
+        }
+      });
+    }
   }
 }

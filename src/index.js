@@ -80,11 +80,54 @@ database.ref('updates').on('child_added', (snapshot) => {
   }
 });
 
+// sync questions
+// const stateQuestions = store.getState().questions;
+// let resultQuestions = {};
+// stateQuestions.forEach((question, i) => {
+//   resultQuestions[i] = question;
+// });
+// database.ref('questions/').set(resultQuestions);
+
+if (env == 'production') {
+  database.ref('questions').once('value').then(function(snapshot) {
+    var result = snapshot.val();
+    if (result) {
+      const resultQuestions = [];
+      Object.keys(result || {}).forEach(key => {
+        resultQuestions.push(result[key]);
+      });
+      store.dispatch({
+        type: 'SYNC_QUESTIONS',
+        payload: {
+          questions: resultQuestions
+        }
+      });
+    }
+  });
+} else {
+  database.ref('questionbaru').once('value').then(function(snapshot) {
+    var result = snapshot.val();
+    if (result) {
+      const resultQuestions = [];
+      Object.keys(result || {}).forEach(key => {
+        resultQuestions.push(result[key]);
+      });
+      store.dispatch({
+        type: 'SYNC_QUESTIONS',
+        payload: {
+          questions: resultQuestions
+        }
+      });
+    }
+  });
+}
+
 store.subscribe(() => {
   const state = store.getState();
 
-  if (currentUsers != state.users && Object.keys(state.users).length > 0) {
-    currentUsers = state.users
+  if (currentUsers != state.users && Object.keys(state.users || {}).length > 0) {
+    currentUsers = state.users;
+    console.log('SYNC to FIREBASE');
     room.syncScore({database})
   }
 
@@ -248,8 +291,16 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
       const arrayName = [nameUser, displayName].sort()
       room.createRoom(`${arrayName[0]}-${arrayName[1]}`);
-      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: `${arrayName[0]}-${arrayName[1]}`})
 
+      const state = store.getState();
+      const currentUser = state.users[source.userId];
+
+      if (currentUser && currentUser.activeRoomId == `${arrayName[0]}-${arrayName[1]}`) {
+        console.log('already in room');
+        return;
+      }
+      room.removeUser({lineId: source.userId});
+      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: `${arrayName[0]}-${arrayName[1]}`})
       room.onlineUser({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: ({users}) => {
         if (users.length > 1) {
           room.broadCast({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: (user) => {

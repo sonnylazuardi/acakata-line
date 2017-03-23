@@ -124,6 +124,10 @@ function questions() {
           lastAnswerTime: Date.now()
         })))
       });
+    case 'SYNC_QUESTIONS':
+      return _extends({}, state, {
+        questions: payload.questions
+      });
     case 'SYNC':
       var _newState = _extends({}, state, {
         users: payload.users
