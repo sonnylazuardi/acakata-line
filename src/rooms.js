@@ -7,17 +7,14 @@ const roomUserSelector = createSelector(
   usersSelector,
   roomsSelector,
   (users, rooms) => {
-    let detailRooms = {}
-    console.log("**********")
-    console.log(users)
+    let detailRooms = {};
     Object.keys(rooms).forEach((roomId) => {
-      detailRooms[roomId] = {}
+      detailRooms[roomId] = {};
       Object.keys(rooms[roomId]).forEach((userId) => {
         detailRooms[roomId][userId]= users[userId]
 
-      })
-    })
-    console.log(detailRooms)
+      });
+    });
     return detailRooms
   }
 )
@@ -52,13 +49,18 @@ export default class Rooms {
     });
   }
 
-  // deleteRooms({ roomName }) {
-  //   delete this.rooms[roomName]
-  // }
-
-  // checkUserExist(roomName, id) {
-  //   return this.rooms[roomName].hasOwnProperty(id)
-  // }
+  addUserFollow({ lineId, displayName }) {
+    const store = this.store;
+    store.dispatch({
+      type: 'ADD_USER_FOLLOW',
+      payload: {
+        user: {
+          lineId,
+          displayName
+        }
+      }
+    });
+  }
 
   removeUser({ lineId }) {
     const store = this.store;
@@ -101,12 +103,17 @@ export default class Rooms {
       callback(user);
     })
   }
-
+  broadCastUsers(callback) {
+    const state = this.store.getState();
+    Object.keys(state.users || {}).forEach((userId) => {
+      const user = state.users[userId];
+      callback(user);
+    })
+  }
   checkUserActive(callback) {
     const state = this.store.getState();
     Object.keys(state.users).forEach((userId) => {
       const user = state.users[userId];
-      console.log('USER CHECK', user);
       if (!user.activeRoomId) return;
       const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
       if (timeDiff > 2) {
@@ -114,17 +121,6 @@ export default class Rooms {
       }
     });
   }
-
-  // getTimeDiff(userId) {
-  //   const state = this.store.getState();
-  //   Object.keys(state.users).forEach((userId) => {
-  //     const user = state.users[userId];
-  //     const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
-  //     if (timeDiff > 2 && user.activeRoomId) {
-  //       callback(user);
-  //     }
-  //   });
-  // }
 
   broadCastAnswerState(callback) {
     const state = this.store.getState();
@@ -192,7 +188,6 @@ export default class Rooms {
   syncScore({database}) {
     const state = this.store.getState();
     const user = state.users;
-    console.log(user)
     database.ref('users/').set(user);
 
   }

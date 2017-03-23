@@ -52,6 +52,34 @@ let currentTimer = null;
 
 room.syncReducer({database})
 
+database.ref('updates').on('child_added', (snapshot) => {
+  var result = snapshot.val();
+  if (result) {
+    if (!result.stickerId || !result.packageId) {
+      result.stickerId = 114;
+      result.packageId = 1;
+    }
+    room.broadCastUsers((user) => {
+      let button = {
+        altText: `${result.title} - ${result.description}`,
+        title: result.title,
+        text: result.description,
+        actions: [
+          {
+            type: 'message',
+            label: 'Menu',
+            text: '/menu'
+          }
+        ]
+      };
+      if (result.thumbnailImageUrl) button.thumbnailImageUrl = result.thumbnailImageUrl;
+      bot.pushMessage(user.lineId, new Bot.Messages()
+        .addButtons(button)
+        .addSticker({packageId: result.packageId, stickerId: result.stickerId}).commit());
+    });
+  }
+});
+
 store.subscribe(() => {
   const state = store.getState();
 
@@ -119,7 +147,7 @@ store.subscribe(() => {
       room.broadCast({roomId: lastAnswer.roomId, callback: (user) => {
         if (lastAnswer.answerState) {
           if (lastAnswer.addedScore == 10) {
-            bot.pushMessage(user.lineId, new Bot.Messages().addText(`${lastAnswer.displayName} menjawab dengan benar (+10)`).commit());
+            bot.pushMessage(user.lineId, new Bot.Messages().addSticker({packageId: 1, stickerId: 114}).addText(`${lastAnswer.displayName} menjawab dengan benar (+10)`).commit());
           } else if (lastAnswer.addedScore == 5) {
             bot.pushMessage(user.lineId, new Bot.Messages().addText(`${lastAnswer.displayName} menjawab ${lastAnswer.answerText} (+5)`).commit());
           } else {
@@ -137,17 +165,16 @@ store.subscribe(() => {
 room.createRoom('test');
 questions.start();
 
-bot.on('webhook', ({port, endpoint}) => {
-  console.log(`bot listens on port ${port}.`)
-})
-
-bot.on('follow', (event) => {
-  bot.getProfileFromEvent(event).then(({displayName}) => {
-    console.log(event.replyToken, displayName);
-    bot.replyMessage(event.replyToken, new Bot.Messages().addText(`Halo ${displayName}!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
+const showOnBoarding = (displayName) => {
+  return new Bot.Messages().addText(`Halo ${displayName}!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
 
 Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!`)
-      .addSticker({packageId: 1, stickerId: 406})
+    .addSticker({packageId: 1, stickerId: 406})
+    .commit();
+}
+
+const showMenu = (displayName) => {
+  return new Bot.Messages()
       .addButtons({
         thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
         altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
@@ -176,10 +203,19 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
           }
         ]
       })
-      .commit()).catch(e => {
-        console.log('ERROR ', e);
-      })
-  })
+      .commit();
+}
+
+bot.on('webhook', ({port, endpoint}) => {
+  console.log(`bot listens on port ${port}.`)
+})
+
+bot.on('follow', (event) => {
+  bot.getProfileFromEvent(event).then(({displayName}) => {
+    room.addUserFollow({lineId: event.source.userId, displayName: displayName});
+    bot.pushMessage(event.source.userId, showMenu());
+    bot.pushMessage(event.source.userId, showOnBoarding(displayName)).catch(err => console.log(err));
+  });
 })
 
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
@@ -226,9 +262,11 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     }});
   } else if (text == '/exit') {
     room.removeUser({lineId: source.userId});
+    bot.pushMessage(source.userId, new Bot.Messages().addText(`Kamu sudah keluar dari permainan`).commit());
+  } else if (text == '/menu') {
+    bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({lineId: source.userId})) {
     const answerText = text;
-
     questions.checkAnswer({answerText, lineId: source.userId});
   }
 });

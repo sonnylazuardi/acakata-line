@@ -63,6 +63,30 @@ var currentTimer = null;
 
 room.syncReducer({ database: database });
 
+database.ref('updates').on('child_added', function (snapshot) {
+  var result = snapshot.val();
+  if (result) {
+    if (!result.stickerId || !result.packageId) {
+      result.stickerId = 114;
+      result.packageId = 1;
+    }
+    room.broadCastUsers(function (user) {
+      var button = {
+        altText: result.title + ' - ' + result.description,
+        title: result.title,
+        text: result.description,
+        actions: [{
+          type: 'message',
+          label: 'Menu',
+          text: '/menu'
+        }]
+      };
+      if (result.thumbnailImageUrl) button.thumbnailImageUrl = result.thumbnailImageUrl;
+      bot.pushMessage(user.lineId, new Bot.Messages().addButtons(button).addSticker({ packageId: result.packageId, stickerId: result.stickerId }).commit());
+    });
+  }
+});
+
 store.subscribe(function () {
   var state = store.getState();
 
@@ -129,7 +153,7 @@ store.subscribe(function () {
       room.broadCast({ roomId: lastAnswer.roomId, callback: function callback(user) {
           if (lastAnswer.answerState) {
             if (lastAnswer.addedScore == 10) {
-              bot.pushMessage(user.lineId, new Bot.Messages().addText(lastAnswer.displayName + ' menjawab dengan benar (+10)').commit());
+              bot.pushMessage(user.lineId, new Bot.Messages().addSticker({ packageId: 1, stickerId: 114 }).addText(lastAnswer.displayName + ' menjawab dengan benar (+10)').commit());
             } else if (lastAnswer.addedScore == 5) {
               bot.pushMessage(user.lineId, new Bot.Messages().addText(lastAnswer.displayName + ' menjawab ' + lastAnswer.answerText + ' (+5)').commit());
             } else {
@@ -147,6 +171,36 @@ store.subscribe(function () {
 room.createRoom('test');
 questions.start();
 
+var showOnBoarding = function showOnBoarding(displayName) {
+  return new Bot.Messages().addText('Halo ' + displayName + '!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 }).commit();
+};
+
+var showMenu = function showMenu(displayName) {
+  return new Bot.Messages().addButtons({
+    thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
+    altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
+    title: 'Acakata Menu',
+    text: 'Mau mulai main?',
+    actions: [{
+      type: 'message',
+      label: 'Mulai Battle',
+      text: '/battle'
+    }, {
+      type: 'message',
+      label: 'Duel 1 vs 1',
+      text: '/startduel'
+    }, {
+      type: 'message',
+      label: 'Highscore',
+      text: '/highscore'
+    }, {
+      type: 'message',
+      label: 'Cara Bermain',
+      text: '/help'
+    }]
+  }).commit();
+};
+
 bot.on('webhook', function (_ref2) {
   var port = _ref2.port,
       endpoint = _ref2.endpoint;
@@ -158,31 +212,10 @@ bot.on('follow', function (event) {
   bot.getProfileFromEvent(event).then(function (_ref3) {
     var displayName = _ref3.displayName;
 
-    console.log(event.replyToken, displayName);
-    bot.replyMessage(event.replyToken, new Bot.Messages().addText('Halo ' + displayName + '!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 }).addButtons({
-      thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
-      altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
-      title: 'Acakata Menu',
-      text: 'Mau mulai main?',
-      actions: [{
-        type: 'message',
-        label: 'Mulai Battle',
-        text: '/battle'
-      }, {
-        type: 'message',
-        label: 'Duel 1 vs 1',
-        text: '/startduel'
-      }, {
-        type: 'message',
-        label: 'Highscore',
-        text: '/highscore'
-      }, {
-        type: 'message',
-        label: 'Cara Bermain',
-        text: '/help'
-      }]
-    }).commit()).catch(function (e) {
-      console.log('ERROR ', e);
+    room.addUserFollow({ lineId: event.source.userId, displayName: displayName });
+    bot.pushMessage(event.source.userId, showMenu());
+    bot.pushMessage(event.source.userId, showOnBoarding(displayName)).catch(function (err) {
+      return console.log(err);
     });
   });
 });
@@ -258,9 +291,11 @@ bot.on('text', function (_ref4) {
       } });
   } else if (text == '/exit') {
     room.removeUser({ lineId: source.userId });
+    bot.pushMessage(source.userId, new Bot.Messages().addText('Kamu sudah keluar dari permainan').commit());
+  } else if (text == '/menu') {
+    bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({ lineId: source.userId })) {
     var answerText = text;
-
     questions.checkAnswer({ answerText: answerText, lineId: source.userId });
   }
 });

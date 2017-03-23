@@ -115,6 +115,20 @@ export default function questions(state = initialState, action) {
         }
       }
       return newState;
+    case 'ADD_USER_FOLLOW':
+      var newState = {
+        ...state,
+        users:{
+          ...state.users,
+          [payload.user.lineId]: {
+            lineId: payload.user.lineId,
+            score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
+            displayName: payload.user.displayName,
+            activeRoomId: null
+          }
+        }
+      }
+      return newState;
     case 'EXTEND_TIME':
       return {
         ...state,

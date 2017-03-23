@@ -108,6 +108,16 @@ function questions() {
         }))
       });
       return _newState;
+    case 'ADD_USER_FOLLOW':
+      var _newState = _extends({}, state, {
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, {
+          lineId: payload.user.lineId,
+          score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
+          displayName: payload.user.displayName,
+          activeRoomId: null
+        }))
+      });
+      return _newState;
     case 'EXTEND_TIME':
       return _extends({}, state, {
         users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
