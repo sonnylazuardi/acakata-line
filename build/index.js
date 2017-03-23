@@ -93,6 +93,9 @@ store.subscribe(function () {
   }
 });
 
+room.createRoom('test');
+questions.start();
+
 bot.on('webhook', function (_ref) {
   var port = _ref.port,
       endpoint = _ref.endpoint;
@@ -151,6 +154,8 @@ bot.on('text', function (_ref3) {
               return '' + user.displayName;
             }).join('\n')).commit());
           }
+          var timer = questions.getTimer();
+          bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
         } });
     });
   } else if (text.indexOf('/duel') > -1) {
@@ -175,11 +180,6 @@ bot.on('text', function (_ref3) {
           }
         } });
     });
-  } else if (text == '/start') {
-    room.createRoom('test');
-    questions.start();
-    var timer = questions.getTimer();
-    bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
   } else if (text == '/highscore') {
     room.listHighscore({ userId: source.userId, callback: function callback(_ref8) {
         var user = _ref8.user,
