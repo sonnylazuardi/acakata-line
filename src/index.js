@@ -183,7 +183,7 @@ const showMenu = (displayName) => {
         actions: [
           {
             type: 'message',
-            label: 'Mulai Battle',
+            label: 'Mulai Main',
             text: '/battle'
           },
           {
@@ -198,8 +198,8 @@ const showMenu = (displayName) => {
           },
           {
             type: 'message',
-            label: 'Cara Bermain',
-            text: '/help'
+            label: 'Keluar',
+            text: '/exit'
           }
         ]
       })
@@ -223,6 +223,10 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
       room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
       room.onlineUser({roomId: 'test', callback: ({users}) => {
+        room.broadCast({roomId: 'test', callback: (user) => {
+          bot.pushMessage(user.lineId, new Bot.Messages().addText(`${displayName} baru saja masuk battle`).commit());
+        }});
+
         const timer = questions.getTimer();
         bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
         if (users.length <= 10 && users.length > 1) {
@@ -248,19 +252,46 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
 
       room.onlineUser({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: ({users}) => {
         if (users.length > 1) {
-          bot.pushMessage(source.userId, new Bot.Messages().addText(`Duel sudah dimulai`).commit());
+          room.broadCast({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: (user) => {
+            bot.pushMessage(user.lineId, new Bot.Messages().addText(`${displayName} baru saja masuk duel`).commit());
+          }});
         } else {
+          room.requestDuel({displayName: nameUser, callback: (user) => {
+            bot.pushMessage(user.lineId, new Bot.Messages().addButtons({
+              altText: `Silakan ketik\n\n/duel ${displayName} untuk memulai duel`,
+              title: 'Acakata Duel',
+              text: `${displayName} menantang kamu duel, terima tantangan?`,
+              actions: [
+                {
+                  type: 'message',
+                  label: 'Terima Duel',
+                  text: `/duel ${displayName}`
+                },
+              ]
+            }).commit());
+          }});
           bot.pushMessage(source.userId, new Bot.Messages().addText(`Menunggu lawan duel`).commit());
         }
+        const timer = questions.getTimer();
+        bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
       }});
     });
   } else if (text == '/continue') {
-    room.exte
+    room.extendTime({lineId: source.userId});
   } else if (text == '/highscore') {
     room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
+
   } else if (text == '/exit') {
+    const state = store.getState();
+    const currentUser = state.users[source.userId];
+    if (currentUser) {
+      const roomId = currentUser.activeRoomId;
+      room.broadCast({roomId: roomId, callback: (user) => {
+        bot.pushMessage(user.lineId, new Bot.Messages().addText(`${currentUser.displayName} baru saja keluar`).commit());
+      }});
+    }
     room.removeUser({lineId: source.userId});
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Kamu sudah keluar dari permainan`).commit());
   } else if (text == '/menu') {

@@ -96,6 +96,23 @@ export default class Rooms {
     })
 
   }
+
+  requestDuel({displayName, callback}) {
+    const state = this.store.getState();
+    let users = [];
+    Object.keys(state.users || {}).forEach((userId) => {
+      const user = state.users[userId];
+      users.push(user);
+    });
+
+    const userTarget = users.filter(user => {
+      return user.displayName == displayName;
+    })[0];
+    if (userTarget) {
+      callback(userTarget);
+    }
+  }
+
   broadCast({roomId, callback}) {
     const state = this.store.getState();
     Object.keys(state.rooms[roomId]).forEach((key) => {
@@ -144,29 +161,12 @@ export default class Rooms {
 
   listHighscore({userId, callback}) {
     const state = this.store.getState();
-    const detailRooms = roomUserSelector(state)
-    console.log(state.users[userId])
-    if(!state.users[userId] || !state.users[userId].activeRoomId) {
-      const high = Object.keys(state.users).map((key) => {
-        return state.users[key]
-      }).sort((a,b) => {
-        return b.score - a.score;
-      })
-      callback({user:{lineId:userId}, highscores:high});
-      return;
-    }
-    const roomId = state.users[userId].activeRoomId
-    const highscores = Object.keys(detailRooms[roomId]).map(key => {
-      const user = detailRooms[roomId][key];
-      return user;
-    }).sort((a, b) => {
+    const highscores = Object.keys(state.users).map((key) => {
+      return state.users[key]
+    }).sort((a,b) => {
       return b.score - a.score;
-    });
-
-    Object.keys(detailRooms[roomId]).forEach((key) => {
-      const user = detailRooms[roomId][key];
-      callback({user, highscores});
     })
+    callback({user: {lineId: userId}, highscores});
   }
 
   onlineUser({roomId, callback}) {

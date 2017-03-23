@@ -131,10 +131,30 @@ var Rooms = function () {
       });
     }
   }, {
-    key: 'broadCast',
-    value: function broadCast(_ref5) {
-      var roomId = _ref5.roomId,
+    key: 'requestDuel',
+    value: function requestDuel(_ref5) {
+      var displayName = _ref5.displayName,
           callback = _ref5.callback;
+
+      var state = this.store.getState();
+      var users = [];
+      Object.keys(state.users || {}).forEach(function (userId) {
+        var user = state.users[userId];
+        users.push(user);
+      });
+
+      var userTarget = users.filter(function (user) {
+        return user.displayName == displayName;
+      })[0];
+      if (userTarget) {
+        callback(userTarget);
+      }
+    }
+  }, {
+    key: 'broadCast',
+    value: function broadCast(_ref6) {
+      var roomId = _ref6.roomId,
+          callback = _ref6.callback;
 
       var state = this.store.getState();
       Object.keys(state.rooms[roomId]).forEach(function (key) {
@@ -191,40 +211,23 @@ var Rooms = function () {
     }
   }, {
     key: 'listHighscore',
-    value: function listHighscore(_ref6) {
-      var userId = _ref6.userId,
-          callback = _ref6.callback;
+    value: function listHighscore(_ref7) {
+      var userId = _ref7.userId,
+          callback = _ref7.callback;
 
       var state = this.store.getState();
-      var detailRooms = roomUserSelector(state);
-      console.log(state.users[userId]);
-      if (!state.users[userId] || !state.users[userId].activeRoomId) {
-        var high = Object.keys(state.users).map(function (key) {
-          return state.users[key];
-        }).sort(function (a, b) {
-          return b.score - a.score;
-        });
-        callback({ user: { lineId: userId }, highscores: high });
-        return;
-      }
-      var roomId = state.users[userId].activeRoomId;
-      var highscores = Object.keys(detailRooms[roomId]).map(function (key) {
-        var user = detailRooms[roomId][key];
-        return user;
+      var highscores = Object.keys(state.users).map(function (key) {
+        return state.users[key];
       }).sort(function (a, b) {
         return b.score - a.score;
       });
-
-      Object.keys(detailRooms[roomId]).forEach(function (key) {
-        var user = detailRooms[roomId][key];
-        callback({ user: user, highscores: highscores });
-      });
+      callback({ user: { lineId: userId }, highscores: highscores });
     }
   }, {
     key: 'onlineUser',
-    value: function onlineUser(_ref7) {
-      var roomId = _ref7.roomId,
-          callback = _ref7.callback;
+    value: function onlineUser(_ref8) {
+      var roomId = _ref8.roomId,
+          callback = _ref8.callback;
 
       var state = this.store.getState();
       var detailRooms = roomUserSelector(state);
@@ -236,8 +239,8 @@ var Rooms = function () {
     }
   }, {
     key: 'checkUserExist',
-    value: function checkUserExist(_ref8) {
-      var lineId = _ref8.lineId;
+    value: function checkUserExist(_ref9) {
+      var lineId = _ref9.lineId;
 
       var state = this.store.getState();
 
@@ -245,8 +248,8 @@ var Rooms = function () {
     }
   }, {
     key: 'syncScore',
-    value: function syncScore(_ref9) {
-      var database = _ref9.database;
+    value: function syncScore(_ref10) {
+      var database = _ref10.database;
 
       var state = this.store.getState();
       var user = state.users;
@@ -254,8 +257,8 @@ var Rooms = function () {
     }
   }, {
     key: 'syncReducer',
-    value: function syncReducer(_ref10) {
-      var database = _ref10.database;
+    value: function syncReducer(_ref11) {
+      var database = _ref11.database;
 
       var store = this.store;
       var state = store.getState();

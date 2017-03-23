@@ -183,7 +183,7 @@ var showMenu = function showMenu(displayName) {
     text: 'Mau mulai main?',
     actions: [{
       type: 'message',
-      label: 'Mulai Battle',
+      label: 'Mulai Main',
       text: '/battle'
     }, {
       type: 'message',
@@ -195,8 +195,8 @@ var showMenu = function showMenu(displayName) {
       text: '/highscore'
     }, {
       type: 'message',
-      label: 'Cara Bermain',
-      text: '/help'
+      label: 'Keluar',
+      text: '/exit'
     }]
   }).commit();
 };
@@ -233,6 +233,10 @@ bot.on('text', function (_ref4) {
       room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
       room.onlineUser({ roomId: 'test', callback: function callback(_ref6) {
           var users = _ref6.users;
+
+          room.broadCast({ roomId: 'test', callback: function callback(user) {
+              bot.pushMessage(user.lineId, new Bot.Messages().addText(displayName + ' baru saja masuk battle').commit());
+            } });
 
           var timer = questions.getTimer();
           bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
@@ -272,14 +276,30 @@ bot.on('text', function (_ref4) {
           var users = _ref9.users;
 
           if (users.length > 1) {
-            bot.pushMessage(source.userId, new Bot.Messages().addText('Duel sudah dimulai').commit());
+            room.broadCast({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(user) {
+                bot.pushMessage(user.lineId, new Bot.Messages().addText(displayName + ' baru saja masuk duel').commit());
+              } });
           } else {
+            room.requestDuel({ displayName: _nameUser, callback: function callback(user) {
+                bot.pushMessage(user.lineId, new Bot.Messages().addButtons({
+                  altText: 'Silakan ketik\n\n/duel ' + displayName + ' untuk memulai duel',
+                  title: 'Acakata Duel',
+                  text: displayName + ' menantang kamu duel, terima tantangan?',
+                  actions: [{
+                    type: 'message',
+                    label: 'Terima Duel',
+                    text: '/duel ' + displayName
+                  }]
+                }).commit());
+              } });
             bot.pushMessage(source.userId, new Bot.Messages().addText('Menunggu lawan duel').commit());
           }
+          var timer = questions.getTimer();
+          bot.pushMessage(source.userId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam ' + timer + ' detik').commit());
         } });
     });
   } else if (text == '/continue') {
-    room.exte;
+    room.extendTime({ lineId: source.userId });
   } else if (text == '/highscore') {
     room.listHighscore({ userId: source.userId, callback: function callback(_ref10) {
         var user = _ref10.user,
@@ -290,6 +310,14 @@ bot.on('text', function (_ref4) {
         }).join('\n')).commit());
       } });
   } else if (text == '/exit') {
+    var state = store.getState();
+    var currentUser = state.users[source.userId];
+    if (currentUser) {
+      var roomId = currentUser.activeRoomId;
+      room.broadCast({ roomId: roomId, callback: function callback(user) {
+          bot.pushMessage(user.lineId, new Bot.Messages().addText(currentUser.displayName + ' baru saja keluar').commit());
+        } });
+    }
     room.removeUser({ lineId: source.userId });
     bot.pushMessage(source.userId, new Bot.Messages().addText('Kamu sudah keluar dari permainan').commit());
   } else if (text == '/menu') {
