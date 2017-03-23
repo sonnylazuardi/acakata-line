@@ -167,12 +167,7 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
             type: 'message',
             label: 'Cara Bermain',
             text: '/help'
-          },
-          {
-            type: 'message',
-            label: 'Keluar Permainan',
-            text: '/exit'
-          },
+          }
         ]
       })
       .commit()).catch(e => {

@@ -175,10 +175,6 @@ bot.on('follow', function (event) {
         type: 'message',
         label: 'Cara Bermain',
         text: '/help'
-      }, {
-        type: 'message',
-        label: 'Keluar Permainan',
-        text: '/exit'
       }]
     }).commit()).catch(function (e) {
       console.log('ERROR ', e);
