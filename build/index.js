@@ -96,7 +96,8 @@ database.ref('updates').on('child_added', function (snapshot) {
 // database.ref('questions/').set(resultQuestions);
 
 if (env == 'production') {
-  database.ref('questions').once('value').then(function (snapshot) {
+  database.ref('questions').on('value', function (snapshot) {
+    console.log('SYNC Questions');
     var result = snapshot.val();
     if (result) {
       var resultQuestions = [];
@@ -112,7 +113,8 @@ if (env == 'production') {
     }
   });
 } else {
-  database.ref('questionbaru').once('value').then(function (snapshot) {
+  database.ref('questionbaru').on('value', function (snapshot) {
+    console.log('SYNC Questions');
     var result = snapshot.val();
     if (result) {
       var resultQuestions = [];
