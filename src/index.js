@@ -117,6 +117,7 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
 })
 
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
+  questions.start();
   if (text == '/join') {
     room.createRoom('test');
     bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
@@ -149,7 +150,6 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   }
   else if (text == '/start') {
     room.createRoom('test');
-    questions.start();
     const timer = questions.getTimer();
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Pertanyaan berikutnya akan muncul dalam ${timer} detik`).commit());
   } else if (text == '/highscore') {
