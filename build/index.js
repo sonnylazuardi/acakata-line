@@ -26,15 +26,15 @@ _firebaseAdmin2.default.initializeApp({
   databaseURL: "https://acakkata-12bf7.firebaseio.com"
 });
 var database = _firebaseAdmin2.default.database();
-// const Bot = require('node-line-messaging-api');
-// const ID = `1501455661`
-// const SECRET = `367d38f1f36d2b9c3de59437a88ddd23`
-// const TOKEN = `8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=`
-
 var Bot = require('node-line-messaging-api');
-var ID = '1506324098';
-var SECRET = '67cdf8ca5562c3b558c66d88115762c7';
-var TOKEN = 'qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=';
+var ID = '1501455661';
+var SECRET = '367d38f1f36d2b9c3de59437a88ddd23';
+var TOKEN = '8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=';
+
+// const Bot = require('node-line-messaging-api');
+// const ID = `1506324098`
+// const SECRET = `67cdf8ca5562c3b558c66d88115762c7`
+// const TOKEN = `qP7mjb0JygPTaztahWWNdv+3x1oQEcYAk3jAcORqe7Ictlfza8qCuG8eTb2VAfppXhh73MG3gAAuW42/SCGoyjB3N/9NFsSe6rh0I0xM9WAEVvTnKqIPXIXtOn9UbGIoQIqvEg12mQ39tQ+o+Y3n6gdB04t89/1O/w1cDnyilFU=`
 
 var PORT = process.env.PORT || 3002;
 var bot = new Bot({

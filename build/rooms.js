@@ -118,7 +118,7 @@ var Rooms = function () {
     key: 'broadCastAll',
     value: function broadCastAll(callback) {
       var state = this.store.getState();
-      Object.keys(state.rooms).forEach(function (roomId) {
+      Object.keys(state.rooms || {}).forEach(function (roomId) {
         Object.keys(state.rooms[roomId]).forEach(function (key) {
           var user = state.rooms[roomId][key];
           callback(user);
@@ -143,8 +143,10 @@ var Rooms = function () {
       var state = this.store.getState();
       Object.keys(state.users).forEach(function (userId) {
         var user = state.users[userId];
+        console.log('USER CHECK', user);
+        if (!user.activeRoomId) return;
         var timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
-        if (timeDiff > 2 && user.activeRoomId) {
+        if (timeDiff > 2) {
           callback(user);
         }
       });
@@ -165,7 +167,7 @@ var Rooms = function () {
     key: 'broadCastAnswerState',
     value: function broadCastAnswerState(callback) {
       var state = this.store.getState();
-      Object.keys(state.rooms).forEach(function (roomId) {
+      Object.keys(state.rooms || {}).forEach(function (roomId) {
         Object.keys(state.rooms[roomId]).forEach(function (key) {
           var user = state.rooms[roomId][key];
           var answerByUser = state.answers.filter(function (answer) {

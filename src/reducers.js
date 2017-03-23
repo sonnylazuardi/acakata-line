@@ -67,33 +67,20 @@ export default function questions(state = initialState, action) {
         }
       }
     case 'REMOVE_USER':
-      if(!state.users[payload.user.lineId] || !state.users[payload.user.lineId].activeRoomId) {
-        return state;
-      }
-      var roomId = state.users[payload.user.lineId].activeRoomId
-      var updateRoom = Object.keys(state.rooms[roomId]).filter(key => {
-        return key != payload.user.lineId;
-      }).reduce((acc, key) => {
-        return {
-          ...acc,
-          [key]: state.rooms[roomId][key]
-        };
-      }, {});
-      var newState = {
-        ...state,
-        rooms: {
-          ...state.rooms,
-          [roomId]: updateRoom
-        },
-        users: {
-          ...state.users,
-          [payload.user.lineId]: {
-            ...state.users[payload.user.lineId],
-            activeRoomId: null
+      var updateRoom = {};
+      Object.keys(state.rooms || {}).forEach((roomId) => {
+        updateRoom[roomId] = {};
+        Object.keys(state.rooms[roomId] || {}).forEach((userId) => {
+          const user = state.rooms[roomId][userId];
+          if (user.lineId != payload.user.lineId) {
+            updateRoom[roomId][userId] = user;
           }
-        }
-      }
-      console.log('NEW ROOM', newState.rooms);
+        });
+      });
+      const newState = {
+        ...state,
+        rooms: updateRoom
+      };
       return newState;
     case 'ADD_USER':
       var updateRoom = {

@@ -86,7 +86,7 @@ export default class Rooms {
 
   broadCastAll(callback) {
     const state = this.store.getState();
-    Object.keys(state.rooms).forEach((roomId) => {
+    Object.keys(state.rooms || {}).forEach((roomId) => {
       Object.keys(state.rooms[roomId]).forEach((key) => {
         const user = state.rooms[roomId][key];
         callback(user);
@@ -106,8 +106,10 @@ export default class Rooms {
     const state = this.store.getState();
     Object.keys(state.users).forEach((userId) => {
       const user = state.users[userId];
+      console.log('USER CHECK', user);
+      if (!user.activeRoomId) return;
       const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
-      if (timeDiff > 2 && user.activeRoomId) {
+      if (timeDiff > 2) {
         callback(user);
       }
     });
@@ -126,7 +128,7 @@ export default class Rooms {
 
   broadCastAnswerState(callback) {
     const state = this.store.getState();
-    Object.keys(state.rooms).forEach((roomId) => {
+    Object.keys(state.rooms || {}).forEach((roomId) => {
       Object.keys(state.rooms[roomId]).forEach((key) => {
         const user = state.rooms[roomId][key];
         const answerByUser = state.answers.filter(answer => answer.lineId == user.lineId);
