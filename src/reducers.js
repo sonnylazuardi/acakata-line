@@ -48,6 +48,7 @@ export default function questions(state = initialState, action) {
         answers: [
           ...state.answers,
           {
+            position: state.answers.length,
             lineId: payload.user.lineId,
             addedScore: payload.answer.addedScore,
             answerText: payload.answer.text,
@@ -61,12 +62,13 @@ export default function questions(state = initialState, action) {
           [payload.user.lineId]: {
               ...state.users[payload.user.lineId],
               score: payload.user.score,
+              lastAnswerTime: Date.now()
           }
         }
       }
     case 'REMOVE_USER':
       if(!state.users[payload.user.lineId] || !state.users[payload.user.lineId].activeRoomId) {
-        return state
+        return state;
       }
       var roomId = state.users[payload.user.lineId].activeRoomId
       var updateRoom = Object.keys(state.rooms[roomId]).filter(key => {
@@ -82,8 +84,16 @@ export default function questions(state = initialState, action) {
         rooms: {
           ...state.rooms,
           [roomId]: updateRoom
+        },
+        users: {
+          ...state.users,
+          [payload.user.lineId]: {
+            ...state.users[payload.user.lineId],
+            activeRoomId: null
+          }
         }
       }
+      console.log('NEW ROOM', newState.rooms);
       return newState;
     case 'ADD_USER':
       var updateRoom = {
@@ -103,13 +113,25 @@ export default function questions(state = initialState, action) {
           [payload.user.lineId]: {
             lineId: payload.user.lineId,
             replyToken: payload.user.replyToken,
-            score: state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0 ,
+            score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0 ,
             displayName: payload.user.displayName,
-            activeRoomId: payload.user.roomId
+            activeRoomId: payload.user.roomId,
+            lastAnswerTime: Date.now()
           }
         }
       }
       return newState;
+    case 'EXTEND_TIME':
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [payload.user.lineId]: {
+            ...state.users[payload.user.lineId],
+            lastAnswerTime: Date.now()
+          }
+        }
+      };
     case 'SYNC':
       var newState = {
         ...state,

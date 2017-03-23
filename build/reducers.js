@@ -61,6 +61,7 @@ function questions() {
           correctCounter: payload.correctCounter
         }),
         answers: [].concat(_toConsumableArray(state.answers), [{
+          position: state.answers.length,
           lineId: payload.user.lineId,
           addedScore: payload.answer.addedScore,
           answerText: payload.answer.text,
@@ -69,7 +70,8 @@ function questions() {
           displayName: payload.user.displayName
         }]),
         users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
-          score: payload.user.score
+          score: payload.user.score,
+          lastAnswerTime: Date.now()
         })))
       });
     case 'REMOVE_USER':
@@ -83,8 +85,12 @@ function questions() {
         return _extends({}, acc, _defineProperty({}, key, state.rooms[roomId][key]));
       }, {});
       var newState = _extends({}, state, {
-        rooms: _extends({}, state.rooms, _defineProperty({}, roomId, updateRoom))
+        rooms: _extends({}, state.rooms, _defineProperty({}, roomId, updateRoom)),
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
+          activeRoomId: null
+        })))
       });
+      console.log('NEW ROOM', newState.rooms);
       return newState;
     case 'ADD_USER':
       var updateRoom = _extends({}, state.rooms[payload.user.roomId], _defineProperty({}, payload.user.lineId, {
@@ -95,12 +101,19 @@ function questions() {
         users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, {
           lineId: payload.user.lineId,
           replyToken: payload.user.replyToken,
-          score: state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
+          score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
           displayName: payload.user.displayName,
-          activeRoomId: payload.user.roomId
+          activeRoomId: payload.user.roomId,
+          lastAnswerTime: Date.now()
         }))
       });
       return newState;
+    case 'EXTEND_TIME':
+      return _extends({}, state, {
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
+          lastAnswerTime: Date.now()
+        })))
+      });
     case 'SYNC':
       var newState = _extends({}, state, {
         users: payload.users

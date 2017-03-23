@@ -16,7 +16,7 @@ var Questions = function () {
 
     this.store = store;
     this.questionTimeout = null;
-    this.timerCount = 25;
+    this.timerCount = 30;
   }
 
   _createClass(Questions, [{

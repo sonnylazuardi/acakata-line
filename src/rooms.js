@@ -72,6 +72,18 @@ export default class Rooms {
     });
   }
 
+  extendTime({ lineId }) {
+    const store = this.store;
+    store.dispatch({
+      type: 'EXTEND_TIME',
+      payload: {
+        user: {
+          lineId
+        }
+      }
+    });
+  }
+
   broadCastAll(callback) {
     const state = this.store.getState();
     Object.keys(state.rooms).forEach((roomId) => {
@@ -90,20 +102,58 @@ export default class Rooms {
     })
   }
 
+  checkUserActive(callback) {
+    const state = this.store.getState();
+    Object.keys(state.users).forEach((userId) => {
+      const user = state.users[userId];
+      const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
+      if (timeDiff > 2 && user.activeRoomId) {
+        callback(user);
+      }
+    });
+  }
+
+  // getTimeDiff(userId) {
+  //   const state = this.store.getState();
+  //   Object.keys(state.users).forEach((userId) => {
+  //     const user = state.users[userId];
+  //     const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
+  //     if (timeDiff > 2 && user.activeRoomId) {
+  //       callback(user);
+  //     }
+  //   });
+  // }
+
+  broadCastAnswerState(callback) {
+    const state = this.store.getState();
+    Object.keys(state.rooms).forEach((roomId) => {
+      Object.keys(state.rooms[roomId]).forEach((key) => {
+        const user = state.rooms[roomId][key];
+        const answerByUser = state.answers.filter(answer => answer.lineId == user.lineId);
+        const correctAnswerByUser = state.answers.filter(answer => answer.lineId == user.lineId && answer.answerState)[0];
+        
+        // only show answer state after answering the first question
+        if (answerByUser.length > 0) {
+          if (correctAnswerByUser) {
+            callback({user, answerState: true, position: correctAnswerByUser.position});
+          } else {
+            callback({user, answerState: false, position: 0});
+          }
+        }
+      })
+    })
+  }
+
   listHighscore({userId, callback}) {
     const state = this.store.getState();
     const detailRooms = roomUserSelector(state)
     console.log(state.users[userId])
     if(!state.users[userId] || !state.users[userId].activeRoomId) {
-
-
       const high = Object.keys(state.users).map((key) => {
         return state.users[key]
       }).sort((a,b) => {
         return b.score - a.score;
       })
-
-
       callback({user:{lineId:userId}, highscores:high});
       return;
     }

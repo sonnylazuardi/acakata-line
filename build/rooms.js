@@ -100,6 +100,21 @@ var Rooms = function () {
       });
     }
   }, {
+    key: 'extendTime',
+    value: function extendTime(_ref3) {
+      var lineId = _ref3.lineId;
+
+      var store = this.store;
+      store.dispatch({
+        type: 'EXTEND_TIME',
+        payload: {
+          user: {
+            lineId: lineId
+          }
+        }
+      });
+    }
+  }, {
     key: 'broadCastAll',
     value: function broadCastAll(callback) {
       var state = this.store.getState();
@@ -112,9 +127,9 @@ var Rooms = function () {
     }
   }, {
     key: 'broadCast',
-    value: function broadCast(_ref3) {
-      var roomId = _ref3.roomId,
-          callback = _ref3.callback;
+    value: function broadCast(_ref4) {
+      var roomId = _ref4.roomId,
+          callback = _ref4.callback;
 
       var state = this.store.getState();
       Object.keys(state.rooms[roomId]).forEach(function (key) {
@@ -123,22 +138,69 @@ var Rooms = function () {
       });
     }
   }, {
+    key: 'checkUserActive',
+    value: function checkUserActive(callback) {
+      var state = this.store.getState();
+      Object.keys(state.users).forEach(function (userId) {
+        var user = state.users[userId];
+        var timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
+        if (timeDiff > 2 && user.activeRoomId) {
+          callback(user);
+        }
+      });
+    }
+
+    // getTimeDiff(userId) {
+    //   const state = this.store.getState();
+    //   Object.keys(state.users).forEach((userId) => {
+    //     const user = state.users[userId];
+    //     const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
+    //     if (timeDiff > 2 && user.activeRoomId) {
+    //       callback(user);
+    //     }
+    //   });
+    // }
+
+  }, {
+    key: 'broadCastAnswerState',
+    value: function broadCastAnswerState(callback) {
+      var state = this.store.getState();
+      Object.keys(state.rooms).forEach(function (roomId) {
+        Object.keys(state.rooms[roomId]).forEach(function (key) {
+          var user = state.rooms[roomId][key];
+          var answerByUser = state.answers.filter(function (answer) {
+            return answer.lineId == user.lineId;
+          });
+          var correctAnswerByUser = state.answers.filter(function (answer) {
+            return answer.lineId == user.lineId && answer.answerState;
+          })[0];
+
+          // only show answer state after answering the first question
+          if (answerByUser.length > 0) {
+            if (correctAnswerByUser) {
+              callback({ user: user, answerState: true, position: correctAnswerByUser.position });
+            } else {
+              callback({ user: user, answerState: false, position: 0 });
+            }
+          }
+        });
+      });
+    }
+  }, {
     key: 'listHighscore',
-    value: function listHighscore(_ref4) {
-      var userId = _ref4.userId,
-          callback = _ref4.callback;
+    value: function listHighscore(_ref5) {
+      var userId = _ref5.userId,
+          callback = _ref5.callback;
 
       var state = this.store.getState();
       var detailRooms = roomUserSelector(state);
       console.log(state.users[userId]);
       if (!state.users[userId] || !state.users[userId].activeRoomId) {
-
         var high = Object.keys(state.users).map(function (key) {
           return state.users[key];
         }).sort(function (a, b) {
           return b.score - a.score;
         });
-
         callback({ user: { lineId: userId }, highscores: high });
         return;
       }
@@ -157,9 +219,9 @@ var Rooms = function () {
     }
   }, {
     key: 'onlineUser',
-    value: function onlineUser(_ref5) {
-      var roomId = _ref5.roomId,
-          callback = _ref5.callback;
+    value: function onlineUser(_ref6) {
+      var roomId = _ref6.roomId,
+          callback = _ref6.callback;
 
       var state = this.store.getState();
       var detailRooms = roomUserSelector(state);
@@ -171,8 +233,8 @@ var Rooms = function () {
     }
   }, {
     key: 'checkUserExist',
-    value: function checkUserExist(_ref6) {
-      var lineId = _ref6.lineId;
+    value: function checkUserExist(_ref7) {
+      var lineId = _ref7.lineId;
 
       var state = this.store.getState();
 
@@ -180,8 +242,8 @@ var Rooms = function () {
     }
   }, {
     key: 'syncScore',
-    value: function syncScore(_ref7) {
-      var database = _ref7.database;
+    value: function syncScore(_ref8) {
+      var database = _ref8.database;
 
       var state = this.store.getState();
       var user = state.users;
@@ -190,8 +252,8 @@ var Rooms = function () {
     }
   }, {
     key: 'syncReducer',
-    value: function syncReducer(_ref8) {
-      var database = _ref8.database;
+    value: function syncReducer(_ref9) {
+      var database = _ref9.database;
 
       var store = this.store;
       var state = store.getState();

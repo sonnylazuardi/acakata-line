@@ -2,7 +2,7 @@ export default class Questions {
   constructor(store) {
     this.store = store;
     this.questionTimeout = null;
-    this.timerCount = 25;
+    this.timerCount = 30;
   }
 
   shuffle(str) {
