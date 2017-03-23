@@ -79,7 +79,14 @@ export default function questions(state = initialState, action) {
       });
       const newState = {
         ...state,
-        rooms: updateRoom
+        rooms: updateRoom,
+        users: {
+          ...state.users,
+          [payload.user.lineId]: {
+            ...state.users[payload.user.lineId],
+            activeRoomId: null
+          }
+        }
       };
       return newState;
     case 'ADD_USER':

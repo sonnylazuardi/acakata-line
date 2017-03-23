@@ -86,7 +86,10 @@ function questions() {
         });
       });
       var _newState = _extends({}, state, {
-        rooms: updateRoom
+        rooms: updateRoom,
+        users: _extends({}, state.users, _defineProperty({}, payload.user.lineId, _extends({}, state.users[payload.user.lineId], {
+          activeRoomId: null
+        })))
       });
       return _newState;
     case 'ADD_USER':
