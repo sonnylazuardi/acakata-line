@@ -209,7 +209,6 @@ store.subscribe(() => {
 
 room.createRoom('test');
 questions.start();
-
 const showOnBoarding = (displayName) => {
   return new Bot.Messages().addText(`Halo ${displayName}!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.
 
