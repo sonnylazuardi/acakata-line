@@ -57,7 +57,8 @@ var Rooms = function () {
       var lineId = _ref.lineId,
           replyToken = _ref.replyToken,
           roomId = _ref.roomId,
-          displayName = _ref.displayName;
+          displayName = _ref.displayName,
+          pictureUrl = _ref.pictureUrl;
 
       var store = this.store;
       store.dispatch({
@@ -67,7 +68,8 @@ var Rooms = function () {
             lineId: lineId,
             replyToken: replyToken,
             roomId: roomId,
-            displayName: displayName
+            displayName: displayName,
+            pictureUrl: pictureUrl
           }
         }
       });
@@ -76,7 +78,8 @@ var Rooms = function () {
     key: 'addUserFollow',
     value: function addUserFollow(_ref2) {
       var lineId = _ref2.lineId,
-          displayName = _ref2.displayName;
+          displayName = _ref2.displayName,
+          pictureUrl = _ref2.pictureUrl;
 
       var store = this.store;
       store.dispatch({
@@ -84,7 +87,8 @@ var Rooms = function () {
         payload: {
           user: {
             lineId: lineId,
-            displayName: displayName
+            displayName: displayName,
+            pictureUrl: pictureUrl
           }
         }
       });

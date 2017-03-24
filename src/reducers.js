@@ -110,7 +110,8 @@ export default function questions(state = initialState, action) {
             score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0 ,
             displayName: payload.user.displayName,
             activeRoomId: payload.user.roomId,
-            lastAnswerTime: Date.now()
+            lastAnswerTime: Date.now(),
+            pictureUrl: payload.user.pictureUrl
           }
         }
       }
@@ -124,7 +125,8 @@ export default function questions(state = initialState, action) {
             lineId: payload.user.lineId,
             score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
             displayName: payload.user.displayName,
-            activeRoomId: null
+            activeRoomId: null,
+            pictureUrl: payload.user.pictureUrl
           }
         }
       }

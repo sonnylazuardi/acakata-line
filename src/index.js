@@ -256,17 +256,17 @@ bot.on('webhook', ({port, endpoint}) => {
 })
 
 bot.on('follow', (event) => {
-  bot.getProfileFromEvent(event).then(({displayName}) => {
-    room.addUserFollow({lineId: event.source.userId, displayName: displayName});
+  bot.getProfileFromEvent(event).then((data) => {
+    room.addUserFollow({lineId: event.source.userId, displayName: data.displayName, pictureUrl: data.pictureUrl});
     bot.pushMessage(event.source.userId, showMenu());
-    bot.pushMessage(event.source.userId, showOnBoarding(displayName)).catch(err => console.log(err));
+    bot.pushMessage(event.source.userId, showOnBoarding(data.displayName)).catch(err => console.log(err));
   });
 })
 
 bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   if (text == '/battle') {
-    bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
-      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test'})
+    bot.getProfile(source[`${source.type}Id`]).then(({displayName, pictureUrl}) => {
+      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test', pictureUrl: pictureUrl})
       room.onlineUser({roomId: 'test', callback: ({users}) => {
         room.broadCast({roomId: 'test', callback: (user) => {
           bot.pushMessage(user.lineId, new Bot.Messages().addText(`${displayName} baru saja masuk battle`).commit());
@@ -290,7 +290,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     }});
   } else if (text.indexOf('/duel') > -1) {
     const nameUser = text.split(' ')[1]
-    bot.getProfile(source[`${source.type}Id`]).then(({displayName}) => {
+    bot.getProfile(source[`${source.type}Id`]).then(({displayName, pictureUrl}) => {
       const arrayName = [nameUser, displayName].sort()
       room.createRoom(`${arrayName[0]}-${arrayName[1]}`);
 
@@ -302,7 +302,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
         return;
       }
       room.removeUser({lineId: source.userId});
-      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: `${arrayName[0]}-${arrayName[1]}`})
+      room.addUser({lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: `${arrayName[0]}-${arrayName[1]}`, pictureUrl: pictureUrl})
       room.onlineUser({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: ({users}) => {
         if (users.length > 1) {
           room.broadCast({roomId: `${arrayName[0]}-${arrayName[1]}`, callback: (user) => {
@@ -347,6 +347,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     }
     room.removeUser({lineId: source.userId});
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Kamu sudah keluar dari permainan`).commit());
+    bot.pushMessage(source.userId, showMenu());
   } else if (text == '/menu') {
     bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({lineId: source.userId})) {

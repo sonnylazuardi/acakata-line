@@ -254,30 +254,29 @@ bot.on('webhook', function (_ref2) {
 });
 
 bot.on('follow', function (event) {
-  bot.getProfileFromEvent(event).then(function (_ref3) {
-    var displayName = _ref3.displayName;
-
-    room.addUserFollow({ lineId: event.source.userId, displayName: displayName });
+  bot.getProfileFromEvent(event).then(function (data) {
+    room.addUserFollow({ lineId: event.source.userId, displayName: data.displayName, pictureUrl: data.pictureUrl });
     bot.pushMessage(event.source.userId, showMenu());
-    bot.pushMessage(event.source.userId, showOnBoarding(displayName)).catch(function (err) {
+    bot.pushMessage(event.source.userId, showOnBoarding(data.displayName)).catch(function (err) {
       return console.log(err);
     });
   });
 });
 
-bot.on('text', function (_ref4) {
-  var replyToken = _ref4.replyToken,
-      source = _ref4.source,
-      type = _ref4.source.type,
-      text = _ref4.message.text;
+bot.on('text', function (_ref3) {
+  var replyToken = _ref3.replyToken,
+      source = _ref3.source,
+      type = _ref3.source.type,
+      text = _ref3.message.text;
 
   if (text == '/battle') {
-    bot.getProfile(source[source.type + 'Id']).then(function (_ref5) {
-      var displayName = _ref5.displayName;
+    bot.getProfile(source[source.type + 'Id']).then(function (_ref4) {
+      var displayName = _ref4.displayName,
+          pictureUrl = _ref4.pictureUrl;
 
-      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test' });
-      room.onlineUser({ roomId: 'test', callback: function callback(_ref6) {
-          var users = _ref6.users;
+      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: 'test', pictureUrl: pictureUrl });
+      room.onlineUser({ roomId: 'test', callback: function callback(_ref5) {
+          var users = _ref5.users;
 
           room.broadCast({ roomId: 'test', callback: function callback(user) {
               bot.pushMessage(user.lineId, new Bot.Messages().addText(displayName + ' baru saja masuk battle').commit());
@@ -300,9 +299,9 @@ bot.on('text', function (_ref4) {
   } else if (text == '/startduel') {
     var nameUser = text.split(' ')[1];
     bot.pushMessage(source.userId, new Bot.Messages().addText('Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama di bawah>').commit());
-    room.listHighscore({ userId: source.userId, callback: function callback(_ref7) {
-        var user = _ref7.user,
-            highscores = _ref7.highscores;
+    room.listHighscore({ userId: source.userId, callback: function callback(_ref6) {
+        var user = _ref6.user,
+            highscores = _ref6.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('' + highscores.map(function (user) {
           return '- ' + user.displayName + ' = ' + user.score;
@@ -310,8 +309,9 @@ bot.on('text', function (_ref4) {
       } });
   } else if (text.indexOf('/duel') > -1) {
     var _nameUser = text.split(' ')[1];
-    bot.getProfile(source[source.type + 'Id']).then(function (_ref8) {
-      var displayName = _ref8.displayName;
+    bot.getProfile(source[source.type + 'Id']).then(function (_ref7) {
+      var displayName = _ref7.displayName,
+          pictureUrl = _ref7.pictureUrl;
 
       var arrayName = [_nameUser, displayName].sort();
       room.createRoom(arrayName[0] + '-' + arrayName[1]);
@@ -324,9 +324,9 @@ bot.on('text', function (_ref4) {
         return;
       }
       room.removeUser({ lineId: source.userId });
-      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: arrayName[0] + '-' + arrayName[1] });
-      room.onlineUser({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(_ref9) {
-          var users = _ref9.users;
+      room.addUser({ lineId: source.userId, displayName: displayName, replyToken: replyToken, roomId: arrayName[0] + '-' + arrayName[1], pictureUrl: pictureUrl });
+      room.onlineUser({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(_ref8) {
+          var users = _ref8.users;
 
           if (users.length > 1) {
             room.broadCast({ roomId: arrayName[0] + '-' + arrayName[1], callback: function callback(user) {
@@ -354,9 +354,9 @@ bot.on('text', function (_ref4) {
   } else if (text == '/continue') {
     room.extendTime({ lineId: source.userId });
   } else if (text == '/highscore') {
-    room.listHighscore({ userId: source.userId, callback: function callback(_ref10) {
-        var user = _ref10.user,
-            highscores = _ref10.highscores;
+    room.listHighscore({ userId: source.userId, callback: function callback(_ref9) {
+        var user = _ref9.user,
+            highscores = _ref9.highscores;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n' + highscores.map(function (user) {
           return '- ' + user.displayName + ' = ' + user.score;
@@ -373,6 +373,7 @@ bot.on('text', function (_ref4) {
     }
     room.removeUser({ lineId: source.userId });
     bot.pushMessage(source.userId, new Bot.Messages().addText('Kamu sudah keluar dari permainan').commit());
+    bot.pushMessage(source.userId, showMenu());
   } else if (text == '/menu') {
     bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({ lineId: source.userId })) {

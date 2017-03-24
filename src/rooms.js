@@ -34,7 +34,7 @@ export default class Rooms {
     });
   }
 
-  addUser({ lineId, replyToken, roomId, displayName }) {
+  addUser({ lineId, replyToken, roomId, displayName, pictureUrl }) {
     const store = this.store;
     store.dispatch({
       type: 'ADD_USER',
@@ -43,20 +43,22 @@ export default class Rooms {
           lineId,
           replyToken,
           roomId,
-          displayName
+          displayName,
+          pictureUrl
         }
       }
     });
   }
 
-  addUserFollow({ lineId, displayName }) {
+  addUserFollow({ lineId, displayName, pictureUrl }) {
     const store = this.store;
     store.dispatch({
       type: 'ADD_USER_FOLLOW',
       payload: {
         user: {
           lineId,
-          displayName
+          displayName,
+          pictureUrl
         }
       }
     });
