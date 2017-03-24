@@ -159,6 +159,8 @@ store.subscribe(function () {
         }
       });
       room.broadCastAll(function (user) {
+        questions.nextRound();
+        var currentRound = questions.getRound();
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Pertanyaan berikutnya akan muncul dalam 5 detik.').commit());
       });
     }
@@ -175,13 +177,17 @@ store.subscribe(function () {
 
     room.checkUserActive(function (user) {
       bot.pushMessage(user.lineId, new Bot.Messages().addButtons({
-        altText: 'Kamu sudah lama tidak menjawab ketik /exit untuk keluar, atau /continue untuk tetap bermain',
+        altText: ' /exit untuk keluar, atau /continue untuk tetap bermain',
         title: 'Acakata',
-        text: 'Kamu sudah lama tidak menjawab, mau melanjutkan game?',
+        text: 'Kamu sudah main satu ronde, mau melanjutkan game?',
         actions: [{
           type: 'message',
           label: 'Lanjutkan Permainan',
           text: '/continue'
+        }, {
+          type: 'message',
+          label: 'Lihat Highscore',
+          text: '/highscore'
         }, {
           type: 'message',
           label: 'Keluar Permainan',
@@ -212,7 +218,6 @@ store.subscribe(function () {
     }
   }
 });
-
 room.createRoom('test');
 questions.start();
 var showOnBoarding = function showOnBoarding(displayName) {

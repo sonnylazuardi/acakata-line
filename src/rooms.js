@@ -136,7 +136,7 @@ export default class Rooms {
       const user = state.users[userId];
       if (!user.activeRoomId) return;
       const timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
-      if (timeDiff > 2) {
+      if (timeDiff > 1) {
         callback(user);
       }
     });

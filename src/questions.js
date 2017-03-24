@@ -3,6 +3,7 @@ export default class Questions {
     this.store = store;
     this.questionTimeout = null;
     this.timerCount = 30;
+    this.nextRoundCount = 5;
   }
 
   shuffleWord(str) {
@@ -67,6 +68,27 @@ export default class Questions {
     const store = this.store;
     const state = store.getState();
     return state.timer;
+  }
+
+  nextRound() {
+    const store = this.store;
+    const state = store.getState();
+    let newRound = state.round + 1;
+    if (newRound > this.nextRoundCount) {
+      newRound = 0;
+    }
+    store.dispatch({
+      type: 'NEXT_ROUND',
+      payload: {
+        round: newRound
+      }
+    })
+  }
+
+  getRound() {
+    const store = this.store;
+    const state = store.getState();
+    return state.round;
   }
 
   checkAnswer({answerText, lineId}) {

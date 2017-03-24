@@ -187,7 +187,7 @@ var Rooms = function () {
         var user = state.users[userId];
         if (!user.activeRoomId) return;
         var timeDiff = (Date.now() - user.lastAnswerTime) / 1000 / 60;
-        if (timeDiff > 2) {
+        if (timeDiff > 1) {
           callback(user);
         }
       });

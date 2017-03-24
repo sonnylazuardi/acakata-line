@@ -17,6 +17,7 @@ var Questions = function () {
     this.store = store;
     this.questionTimeout = null;
     this.timerCount = 30;
+    this.nextRoundCount = 5;
   }
 
   _createClass(Questions, [{
@@ -92,6 +93,29 @@ var Questions = function () {
       var store = this.store;
       var state = store.getState();
       return state.timer;
+    }
+  }, {
+    key: "nextRound",
+    value: function nextRound() {
+      var store = this.store;
+      var state = store.getState();
+      var newRound = state.round + 1;
+      if (newRound > this.nextRoundCount) {
+        newRound = 0;
+      }
+      store.dispatch({
+        type: 'NEXT_ROUND',
+        payload: {
+          round: newRound
+        }
+      });
+    }
+  }, {
+    key: "getRound",
+    value: function getRound() {
+      var store = this.store;
+      var state = store.getState();
+      return state.round;
     }
   }, {
     key: "checkAnswer",

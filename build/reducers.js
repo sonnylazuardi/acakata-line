@@ -30,7 +30,8 @@ var initialState = {
   },
   rooms: {},
   answers: [],
-  users: {}
+  users: {},
+  round: 0
 };
 
 function questions() {
@@ -134,8 +135,11 @@ function questions() {
       var _newState = _extends({}, state, {
         users: payload.users
       });
-
       return _newState;
+    case 'NEXT_ROUND':
+      return _extends({}, state, {
+        round: payload.round
+      });
     default:
       return state;
   }

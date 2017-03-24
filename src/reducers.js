@@ -10,6 +10,7 @@ const initialState = {
   rooms: {},
   answers: [],
   users: {},
+  round: 0,
 }
 
 export default function questions(state = initialState, action) {
@@ -152,8 +153,12 @@ export default function questions(state = initialState, action) {
         ...state,
         users: payload.users
       }
-
       return newState;
+    case 'NEXT_ROUND':
+      return {
+        ...state,
+        round: payload.round
+      }
     default:
       return state
   }
