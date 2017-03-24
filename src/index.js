@@ -206,7 +206,6 @@ store.subscribe(() => {
     }
   }
 })
-
 room.createRoom('test');
 questions.start();
 const showOnBoarding = (displayName) => {
