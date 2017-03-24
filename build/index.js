@@ -215,7 +215,6 @@ store.subscribe(function () {
 
 room.createRoom('test');
 questions.start();
-
 var showOnBoarding = function showOnBoarding(displayName) {
   return new Bot.Messages().addText('Halo ' + displayName + '!\n\nKenalin aku bot acakata. Kita bisa main tebak tebakan kata multiplayer loh sama teman-teman lain yang lagi online.\n\nCara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').addSticker({ packageId: 1, stickerId: 406 }).commit();
 };

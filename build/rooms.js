@@ -12,6 +12,10 @@ var _uuid2 = _interopRequireDefault(_uuid);
 
 var _reselect = require('reselect');
 
+var _axios = require('axios');
+
+var _axios2 = _interopRequireDefault(_axios);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -261,8 +265,18 @@ var Rooms = function () {
       if (Object.keys(user || {}).length > 0) {
         if (env == 'production') {
           database.ref('users/').set(user);
+          _axios2.default.put('https://acakkatascore.firebaseio.com/scores.json', user, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
         } else {
           database.ref('userbaru/').set(user);
+          _axios2.default.put('https://acakkatascore.firebaseio.com/scorebaru.json', user, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
         }
       }
     }

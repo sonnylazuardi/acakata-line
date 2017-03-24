@@ -1,5 +1,6 @@
 import uuid from 'uuid';
 import { createSelector } from 'reselect'
+import axios from 'axios';
 
 const usersSelector = state => state.users
 const roomsSelector = state => state.rooms
@@ -194,8 +195,18 @@ export default class Rooms {
     if (Object.keys(user || {}).length > 0) {
       if (env == 'production') {
         database.ref('users/').set(user);
+        axios.put(`https://acakkatascore.firebaseio.com/scores.json`, user, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
       } else {
         database.ref('userbaru/').set(user);
+        axios.put(`https://acakkatascore.firebaseio.com/scorebaru.json`, user, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
       }
     }
   }

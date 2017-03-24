@@ -23,6 +23,7 @@
   "homepage": "https://github.com/sonnylazuardi/family100-bot#readme",
   "dependencies": {
     "ava": "^0.18.1",
+    "axios": "^0.15.3",
     "babel-cli": "^6.16.0",
     "babel-preset-es2015": "^6.16.0",
     "babel-preset-stage-3": "^6.17.0",
