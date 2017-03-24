@@ -296,7 +296,6 @@ bot.on('text', function (_ref3) {
   } else if (text == '/help') {
     bot.pushMessage(source.userId, new Bot.Messages().addSticker({ packageId: 1, stickerId: 406 }).addText('Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').commit());
   } else if (text == '/startduel') {
-    var nameUser = text.split(' ')[1];
     bot.pushMessage(source.userId, new Bot.Messages().addText('Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama di bawah>').commit());
     room.listHighscore({ userId: source.userId, callback: function callback(_ref6) {
         var user = _ref6.user,
@@ -307,12 +306,12 @@ bot.on('text', function (_ref3) {
         }).join('\n')).commit());
       } });
   } else if (text.indexOf('/duel') > -1) {
-    var _nameUser = text.split(' ')[1];
+    var nameUser = text.split('/duel ')[1];
     bot.getProfile(source[source.type + 'Id']).then(function (_ref7) {
       var displayName = _ref7.displayName,
           pictureUrl = _ref7.pictureUrl;
 
-      var arrayName = [_nameUser, displayName].sort();
+      var arrayName = [nameUser, displayName].sort();
       room.createRoom(arrayName[0] + '-' + arrayName[1]);
 
       var state = store.getState();
@@ -332,7 +331,7 @@ bot.on('text', function (_ref3) {
                 bot.pushMessage(user.lineId, new Bot.Messages().addText(displayName + ' baru saja masuk duel').commit());
               } });
           } else {
-            room.requestDuel({ displayName: _nameUser, callback: function callback(user) {
+            room.requestDuel({ displayName: nameUser, callback: function callback(user) {
                 bot.pushMessage(user.lineId, new Bot.Messages().addButtons({
                   altText: 'Silakan ketik\n\n/duel ' + displayName + ' untuk memulai duel',
                   title: 'Acakata Duel',

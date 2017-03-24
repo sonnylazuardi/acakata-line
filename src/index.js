@@ -282,13 +282,12 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/help') {
     bot.pushMessage(source.userId, new Bot.Messages().addSticker({packageId: 1, stickerId: 406}).addText(`Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!`).commit());
   } else if (text == '/startduel') {
-    const nameUser = text.split(' ')[1]
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama di bawah>`).commit());
     room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
   } else if (text.indexOf('/duel') > -1) {
-    const nameUser = text.split(' ')[1]
+    const nameUser = text.split('/duel ')[1]
     bot.getProfile(source[`${source.type}Id`]).then(({displayName, pictureUrl}) => {
       const arrayName = [nameUser, displayName].sort()
       room.createRoom(`${arrayName[0]}-${arrayName[1]}`);
