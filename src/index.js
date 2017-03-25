@@ -16,9 +16,9 @@ const env = process.env.NODE_ENV || 'development';
 
 if (env == 'production') {
   var Bot = require('node-line-messaging-api');
-  var ID = `1501455661`
-  var SECRET = `367d38f1f36d2b9c3de59437a88ddd23`
-  var TOKEN = `8Rn/qNeXALta5QAW9d/bSeT4qGsdSTH8VF3d+GFIARxEPOoTC+Sl0+3KdIVLXXOUelUDlxociqtljNPP3py59QH9ECwZbd3AvWBTC2IAHYEZDpYm3QhZE+m6+/aUYQPU18WXCFZ+XTZocY6FcCmp3QdB04t89/1O/w1cDnyilFU=`  
+  var ID = `1507311327`
+  var SECRET = `3a7b96e53ebe774ee732b92ad55155e5`
+  var TOKEN = `yDlUdRjgGAhGHjD9mWesunOz0oIDP/mXzFcdE55103Qytpvw7mZP8eDm+Kt0eMDUp16l+pdit39oRqXOPthRHptkZLxtuIrEChvNvjM2ISPSP14ktW7fM8KTSryHygKEuOMOzgbEamFDNUwWmhN4QwdB04t89/1O/w1cDnyilFU=`  
 } else {
   var Bot = require('node-line-messaging-api');
   var ID = `1506324098`
