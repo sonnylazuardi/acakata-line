@@ -31,9 +31,11 @@ export default class Questions {
   randomize() {
     const state = this.store.getState();
     const randInt = Math.floor(Math.random() * state.questions.length);
+
     const activeQuestion = {
       ...state.questions[randInt],
-      randomAnswer: this.shuffle(state.questions[randInt].answer)
+      randomAnswer: this.shuffle(state.questions[randInt].answer),
+      id: randInt
     };
     return activeQuestion;
   }
@@ -47,12 +49,21 @@ export default class Questions {
         let nextTimer = state.timer - 1;
         if (nextTimer < 0) {
           nextTimer = this.timerCount;
+          const activeQuestion = this.randomize()
           store.dispatch({
             type: 'CHANGE_ACTIVE_QUESTION',
             payload: {
-              activeQuestion: this.randomize()
+              activeQuestion: activeQuestion
             }
           });
+          if(state.round != 0 ){
+            store.dispatch({
+              type: 'POP_QUESTION',
+              payload: {
+                id: activeQuestion.id
+              }
+            });
+          }
         }
         store.dispatch({
           type: 'TICK_TIMER',
@@ -150,6 +161,26 @@ export default class Questions {
   stop() {
     clearInterval(this.questionTimeout);
     this.questionTimeout = null;
+  }
+
+  syncQuestion({database,name}) {
+    const store = this.store;
+    database.ref(name).on('value', (snapshot) => {
+      console.log('SYNC Questions');
+      var result = snapshot.val();
+      if (result) {
+        const resultQuestions = [];
+        Object.keys(result || {}).forEach(key => {
+          resultQuestions.push(result[key]);
+        });
+        store.dispatch({
+          type: 'SYNC_QUESTIONS',
+          payload: {
+            questions: resultQuestions
+          }
+        });
+      }
+    });
   }
 }
 

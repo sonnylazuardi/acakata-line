@@ -18,7 +18,7 @@ if (env == 'production') {
   var Bot = require('node-line-messaging-api');
   var ID = `1507311327`
   var SECRET = `3a7b96e53ebe774ee732b92ad55155e5`
-  var TOKEN = `yDlUdRjgGAhGHjD9mWesunOz0oIDP/mXzFcdE55103Qytpvw7mZP8eDm+Kt0eMDUp16l+pdit39oRqXOPthRHptkZLxtuIrEChvNvjM2ISPSP14ktW7fM8KTSryHygKEuOMOzgbEamFDNUwWmhN4QwdB04t89/1O/w1cDnyilFU=`  
+  var TOKEN = `yDlUdRjgGAhGHjD9mWesunOz0oIDP/mXzFcdE55103Qytpvw7mZP8eDm+Kt0eMDUp16l+pdit39oRqXOPthRHptkZLxtuIrEChvNvjM2ISPSP14ktW7fM8KTSryHygKEuOMOzgbEamFDNUwWmhN4QwdB04t89/1O/w1cDnyilFU=`
 } else {
   var Bot = require('node-line-messaging-api');
   var ID = `1506324098`
@@ -87,42 +87,15 @@ database.ref('updates').on('child_added', (snapshot) => {
 //   resultQuestions[i] = question;
 // });
 // database.ref('questions/').set(resultQuestions);
-
+let nameDatabase;
 if (env == 'production') {
-  database.ref('questions').on('value', (snapshot) => {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      const resultQuestions = [];
-      Object.keys(result || {}).forEach(key => {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase='questions'
+  questions.syncQuestion({database, name:'questions'})
 } else {
-  database.ref('questionbaru').on('value', (snapshot) => {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      const resultQuestions = [];
-      Object.keys(result || {}).forEach(key => {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase='questionbaru'
+  questions.syncQuestion({database, name: 'questionbaru'})
 }
+
 
 store.subscribe(() => {
   const state = store.getState();
@@ -131,6 +104,11 @@ store.subscribe(() => {
     currentUsers = state.users;
     console.log('SYNC to FIREBASE');
     room.syncScore({database})
+  }
+
+  if(state.questions.length == 1) {
+    console.log("pertanyaan sudah mau habis SYNC PERTANYAAN")
+    questions.syncQuestion({database, name: nameDatabase})
   }
 
   if (currentTimer != state.timer) {
@@ -186,7 +164,7 @@ store.subscribe(() => {
               label: 'Keluar Permainan',
               text: '/exit'
             },
-            
+
           ]
         }).commit());
     })
