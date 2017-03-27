@@ -94,41 +94,13 @@ database.ref('updates').on('child_added', function (snapshot) {
 //   resultQuestions[i] = question;
 // });
 // database.ref('questions/').set(resultQuestions);
-
+var nameDatabase = void 0;
 if (env == 'production') {
-  database.ref('questions').on('value', function (snapshot) {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      var resultQuestions = [];
-      Object.keys(result || {}).forEach(function (key) {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase = 'questions';
+  questions.syncQuestion({ database: database, name: 'questions' });
 } else {
-  database.ref('questionbaru').on('value', function (snapshot) {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      var resultQuestions = [];
-      Object.keys(result || {}).forEach(function (key) {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase = 'questionbaru';
+  questions.syncQuestion({ database: database, name: 'questionbaru' });
 }
 
 store.subscribe(function () {
@@ -138,6 +110,11 @@ store.subscribe(function () {
     currentUsers = state.users;
     console.log('SYNC to FIREBASE');
     room.syncScore({ database: database });
+  }
+
+  if (state.questions.length == 1) {
+    console.log("pertanyaan sudah mau habis SYNC PERTANYAAN");
+    questions.syncQuestion({ database: database, name: nameDatabase });
   }
 
   if (currentTimer != state.timer) {

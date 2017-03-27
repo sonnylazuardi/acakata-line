@@ -53,8 +53,10 @@ var Questions = function () {
     value: function randomize() {
       var state = this.store.getState();
       var randInt = Math.floor(Math.random() * state.questions.length);
+
       var activeQuestion = _extends({}, state.questions[randInt], {
-        randomAnswer: this.shuffle(state.questions[randInt].answer)
+        randomAnswer: this.shuffle(state.questions[randInt].answer),
+        id: randInt
       });
       return activeQuestion;
     }
@@ -71,12 +73,21 @@ var Questions = function () {
           var nextTimer = state.timer - 1;
           if (nextTimer < 0) {
             nextTimer = _this2.timerCount;
+            var activeQuestion = _this2.randomize();
             store.dispatch({
               type: 'CHANGE_ACTIVE_QUESTION',
               payload: {
-                activeQuestion: _this2.randomize()
+                activeQuestion: activeQuestion
               }
             });
+            if (state.round != 0) {
+              store.dispatch({
+                type: 'POP_QUESTION',
+                payload: {
+                  id: activeQuestion.id
+                }
+              });
+            }
           }
           store.dispatch({
             type: 'TICK_TIMER',
@@ -182,6 +193,30 @@ var Questions = function () {
     value: function stop() {
       clearInterval(this.questionTimeout);
       this.questionTimeout = null;
+    }
+  }, {
+    key: "syncQuestion",
+    value: function syncQuestion(_ref2) {
+      var database = _ref2.database,
+          name = _ref2.name;
+
+      var store = this.store;
+      database.ref(name).on('value', function (snapshot) {
+        console.log('SYNC Questions');
+        var result = snapshot.val();
+        if (result) {
+          var resultQuestions = [];
+          Object.keys(result || {}).forEach(function (key) {
+            resultQuestions.push(result[key]);
+          });
+          store.dispatch({
+            type: 'SYNC_QUESTIONS',
+            payload: {
+              questions: resultQuestions
+            }
+          });
+        }
+      });
     }
   }]);
 
