@@ -315,7 +315,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     room.extendTime({lineId: source.userId});
   } else if (text == '/highscore') {
     room.listHighscore({userId: source.userId, callback: ({user, highscores, position}) => {
-      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
+      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map((user,i) => (`${i+1}. ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Kamu berada di urutan ke ${position+1}`).commit());
     }});
 
