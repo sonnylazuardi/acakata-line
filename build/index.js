@@ -336,11 +336,13 @@ bot.on('text', function (_ref3) {
   } else if (text == '/highscore') {
     room.listHighscore({ userId: source.userId, callback: function callback(_ref9) {
         var user = _ref9.user,
-            highscores = _ref9.highscores;
+            highscores = _ref9.highscores,
+            position = _ref9.position;
 
         bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n' + highscores.map(function (user) {
           return '- ' + user.displayName + ' = ' + user.score;
         }).join('\n')).commit());
+        bot.pushMessage(user.lineId, new Bot.Messages().addText('Kamu berada di urutan ke ' + (position + 1)).commit());
       } });
   } else if (text == '/exit') {
     var state = store.getState();

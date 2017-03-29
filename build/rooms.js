@@ -224,12 +224,22 @@ var Rooms = function () {
           callback = _ref7.callback;
 
       var state = this.store.getState();
-      var highscores = Object.keys(state.users).map(function (key) {
+      var position = 0;
+      var highscores = Object.keys(state.users).map(function (key, index) {
+
         return state.users[key];
       }).sort(function (a, b) {
         return b.score - a.score;
       });
-      callback({ user: { lineId: userId }, highscores: highscores });
+      highscores.forEach(function (user, index) {
+        if (user.lineId == userId) {
+          position = index;
+        }
+      });
+
+      var length = highscores.length < 10 ? highscores.length : 10;
+
+      callback({ user: { lineId: userId }, highscores: highscores.slice(0, length), position: position });
     }
   }, {
     key: 'onlineUser',
