@@ -314,8 +314,9 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/continue') {
     room.extendTime({lineId: source.userId});
   } else if (text == '/highscore') {
-    room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
+    room.listHighscore({userId: source.userId, callback: ({user, highscores, position}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
+      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Kamu berada di urutan ke ${position+1}`).commit());
     }});
 
   } else if (text == '/exit') {

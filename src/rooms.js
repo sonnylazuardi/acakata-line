@@ -149,7 +149,7 @@ export default class Rooms {
         const user = state.rooms[roomId][key];
         const answerByUser = state.answers.filter(answer => answer.lineId == user.lineId);
         const correctAnswerByUser = state.answers.filter(answer => answer.lineId == user.lineId && answer.answerState)[0];
-        
+
         // only show answer state after answering the first question
         if (answerByUser.length > 0) {
           if (correctAnswerByUser) {
@@ -164,12 +164,22 @@ export default class Rooms {
 
   listHighscore({userId, callback}) {
     const state = this.store.getState();
-    const highscores = Object.keys(state.users).map((key) => {
+    let position = 0;
+    const highscores = Object.keys(state.users).map((key, index) => {
+
       return state.users[key]
     }).sort((a,b) => {
       return b.score - a.score;
     })
-    callback({user: {lineId: userId}, highscores});
+    highscores.forEach((user, index) => {
+      if(user.lineId == userId) {
+        position = index;
+      }
+    })
+
+    const length = (highscores.length < 10) ? highscores.length :10
+
+    callback({user: {lineId: userId},highscores: highscores.slice(0, length), position: position});
   }
 
   onlineUser({roomId, callback}) {
