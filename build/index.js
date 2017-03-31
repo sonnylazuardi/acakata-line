@@ -248,7 +248,7 @@ var showShare = function showShare(user) {
 var showHighscoreCarousel = function showHighscoreCarousel(highscores) {
   var columns = highscores.map(function (user, i) {
     return {
-      thumbnailImageUrl: 'https://images.weserv.nl/?url=' + user.pictureUrl.replace(/http:\/\//g, '') + '&w=300',
+      thumbnailImageUrl: user.pictureUrl ? 'https://images.weserv.nl/?url=' + user.pictureUrl.replace(/http:\/\//g, '') + '&w=300' : 'https://firebasestorage.googleapis.com/v0/b/acakkata-12bf7.appspot.com/o/coverpage.png?alt=media&token=15c56252-404f-49e9-b9c9-c8121fd9aba3',
       title: user.displayName,
       text: user.displayName + ' berada di posisi ' + (i + 1) + ', dan mendapatkan skor ' + user.score,
       actions: [{
