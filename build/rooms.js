@@ -300,31 +300,31 @@ var Rooms = function () {
       var result = null;
 
       var env = process.env.NODE_ENV || 'development';
-      if (env == 'production') {
-        database.ref('users').once('value').then(function (snapshot) {
-          result = snapshot.val();
-          if (result) {
-            store.dispatch({
-              type: 'SYNC',
-              payload: {
-                users: result
-              }
-            });
-          }
-        });
-      } else {
-        database.ref('userbaru').once('value').then(function (snapshot) {
-          result = snapshot.val();
-          if (result) {
-            store.dispatch({
-              type: 'SYNC',
-              payload: {
-                users: result
-              }
-            });
-          }
-        });
-      }
+      // if (env == 'production') {
+      database.ref('users').once('value').then(function (snapshot) {
+        result = snapshot.val();
+        if (result) {
+          store.dispatch({
+            type: 'SYNC',
+            payload: {
+              users: result
+            }
+          });
+        }
+      });
+      // } else {
+      //   database.ref('userbaru').once('value').then(function(snapshot) {
+      //     result = snapshot.val();
+      //     if (result) {
+      //       store.dispatch({
+      //         type: 'SYNC',
+      //         payload: {
+      //           users: result
+      //         }
+      //       });
+      //     }
+      //   });
+      // }
     }
   }, {
     key: 'syncImages',
