@@ -140,6 +140,10 @@ function questions() {
       return _extends({}, state, {
         round: payload.round
       });
+    case 'POP_QUESTION':
+      return _extends({}, state, {
+        questions: [].concat(_toConsumableArray(state.questions.slice(0, payload.id)), _toConsumableArray(state.questions.slice(payload.id + 1)))
+      });
     default:
       return state;
   }

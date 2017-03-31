@@ -159,6 +159,11 @@ export default function questions(state = initialState, action) {
         ...state,
         round: payload.round
       }
+    case 'POP_QUESTION':
+      return {
+        ...state,
+        questions: [...state.questions.slice(0,payload.id),...state.questions.slice(payload.id+1)]
+      }
     default:
       return state
   }

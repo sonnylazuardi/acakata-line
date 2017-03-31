@@ -18,7 +18,7 @@ if (env == 'production') {
   var Bot = require('node-line-messaging-api');
   var ID = `1507311327`
   var SECRET = `3a7b96e53ebe774ee732b92ad55155e5`
-  var TOKEN = `yDlUdRjgGAhGHjD9mWesunOz0oIDP/mXzFcdE55103Qytpvw7mZP8eDm+Kt0eMDUp16l+pdit39oRqXOPthRHptkZLxtuIrEChvNvjM2ISPSP14ktW7fM8KTSryHygKEuOMOzgbEamFDNUwWmhN4QwdB04t89/1O/w1cDnyilFU=`  
+  var TOKEN = `yDlUdRjgGAhGHjD9mWesunOz0oIDP/mXzFcdE55103Qytpvw7mZP8eDm+Kt0eMDUp16l+pdit39oRqXOPthRHptkZLxtuIrEChvNvjM2ISPSP14ktW7fM8KTSryHygKEuOMOzgbEamFDNUwWmhN4QwdB04t89/1O/w1cDnyilFU=`
 } else {
   var Bot = require('node-line-messaging-api');
   var ID = `1506324098`
@@ -87,42 +87,15 @@ database.ref('updates').on('child_added', (snapshot) => {
 //   resultQuestions[i] = question;
 // });
 // database.ref('questions/').set(resultQuestions);
-
+let nameDatabase;
 if (env == 'production') {
-  database.ref('questions').on('value', (snapshot) => {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      const resultQuestions = [];
-      Object.keys(result || {}).forEach(key => {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase='questions'
+  questions.syncQuestion({database, name:'questions'})
 } else {
-  database.ref('questionbaru').on('value', (snapshot) => {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      const resultQuestions = [];
-      Object.keys(result || {}).forEach(key => {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase='questionbaru'
+  questions.syncQuestion({database, name: 'questionbaru'})
 }
+
 
 store.subscribe(() => {
   const state = store.getState();
@@ -131,6 +104,11 @@ store.subscribe(() => {
     currentUsers = state.users;
     console.log('SYNC to FIREBASE');
     room.syncScore({database})
+  }
+
+  if(state.questions.length == 1) {
+    console.log("pertanyaan sudah mau habis SYNC PERTANYAAN")
+    questions.syncQuestion({database, name: nameDatabase})
   }
 
   if (currentTimer != state.timer) {
@@ -186,7 +164,7 @@ store.subscribe(() => {
               label: 'Keluar Permainan',
               text: '/exit'
             },
-            
+
           ]
         }).commit());
     })
@@ -225,36 +203,109 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
 
 const showMenu = (displayName) => {
   return new Bot.Messages()
-      .addButtons({
-        thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/acakkata-12bf7.appspot.com/o/coverpage.png?alt=media&token=15c56252-404f-49e9-b9c9-c8121fd9aba3',
-        altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
-        title: 'Acakata Menu',
-        text: 'Mau mulai main?',
-        actions: [
-          {
-            type: 'message',
-            label: 'Mulai Main',
-            text: '/battle'
-          },
-          {
-            type: 'message',
-            label: 'Duel 1 vs 1',
-            text: '/startduel'
-          },
-          {
-            type: 'message',
-            label: 'Highscore',
-            text: '/highscore'
-          },
-          {
-            type: 'message',
-            label: 'Keluar',
-            text: '/exit'
-          }
-        ]
-      })
-      .commit();
+    .addButtons({
+      thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/acakkata-12bf7.appspot.com/o/coverpage.png?alt=media&token=15c56252-404f-49e9-b9c9-c8121fd9aba3',
+      altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
+      title: 'Acakata Menu',
+      text: 'Mau mulai main?',
+      actions: [
+        {
+          type: 'message',
+          label: 'Mulai Main',
+          text: '/battle'
+        },
+        {
+          type: 'message',
+          label: 'Duel 1 vs 1',
+          text: '/startduel'
+        },
+        {
+          type: 'message',
+          label: 'Highscore',
+          text: '/highscore'
+        },
+        {
+          type: 'message',
+          label: 'Keluar',
+          text: '/exit'
+        }
+      ]
+    })
+    .commit();
 }
+
+const showShare = (user) => {
+  return new Bot.Messages()
+    .addButtons({
+      thumbnailImageUrl: `https://images.weserv.nl/?url=${user.pictureUrl.replace(/http:\/\//g, '')}&w=300`,
+      altText: `Skor ${user.displayName} adalah ${user.score}`,
+      title: `Skor ${user.displayName}`,
+      text: `Skor ${user.displayName} adalah ${user.score}`,
+      actions: [
+        {
+          type: 'uri',
+          label: 'Share',
+          uri: `http://acakatagame.com/score/${user.lineId}`
+        },
+        {
+          type: 'message',
+          label: 'Menu',
+          text: `/menu`
+        },
+      ]
+    })
+    .commit();
+}
+
+const showHighscoreCarousel = (highscores) => {
+  const columns = highscores.map((user, i) => {
+    return {
+      thumbnailImageUrl: `https://images.weserv.nl/?url=${user.pictureUrl.replace(/http:\/\//g, '')}&w=300`,
+      title: user.displayName,
+      text: `${user.displayName} berada di posisi ${i+1}, dan mendapatkan skor ${user.score}`,
+      actions: [
+        {
+          type: 'uri',
+          label: 'Share',
+          uri: `http://acakatagame.com/score/${user.lineId}`
+        },
+      ]
+    }
+  });
+
+  return new Bot.Messages()
+    .addCarousel({altText: `Lihat highscore di smartphone kamu`, columns})
+    .commit();
+}
+
+// .addButtons({
+//       thumbnailImageUrl: ,
+//       altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
+//       title: 'Acakata Menu',
+//       text: 'Mau mulai main?',
+//       actions: [
+//         {
+//           type: 'message',
+//           label: 'Mulai Main',
+//           text: '/battle'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Duel 1 vs 1',
+//           text: '/startduel'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Highscore',
+//           text: '/highscore'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Keluar',
+//           text: '/exit'
+//         }
+//       ]
+//     })
 
 bot.on('webhook', ({port, endpoint}) => {
   console.log(`bot listens on port ${port}.`)
@@ -339,9 +390,10 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/continue') {
     room.extendTime({lineId: source.userId});
   } else if (text == '/highscore') {
-    
-    room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
-      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
+    room.listHighscore({userId: source.userId, callback: ({user, highscores, position}) => {
+      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map((user,i) => (`${i+1}. ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
+      bot.pushMessage(user.lineId, new Bot.Messages().addText(`Kamu berada di urutan ke ${position+1}`).commit());
+      bot.pushMessage(user.lineId, showHighscoreCarousel(highscores)).catch(err => console.log('ERR', err));
     }});
 
   } else if (text == '/exit') {
@@ -355,7 +407,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
     }
     room.removeUser({lineId: source.userId});
     bot.pushMessage(source.userId, new Bot.Messages().addText(`Kamu sudah keluar dari permainan`).commit());
-    bot.pushMessage(source.userId, showMenu());
+    bot.pushMessage(source.userId, showShare(currentUser)).catch(err => console.log('ERR', err));
   } else if (text == '/menu') {
     bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({lineId: source.userId})) {

@@ -94,41 +94,13 @@ database.ref('updates').on('child_added', function (snapshot) {
 //   resultQuestions[i] = question;
 // });
 // database.ref('questions/').set(resultQuestions);
-
+var nameDatabase = void 0;
 if (env == 'production') {
-  database.ref('questions').on('value', function (snapshot) {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      var resultQuestions = [];
-      Object.keys(result || {}).forEach(function (key) {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase = 'questions';
+  questions.syncQuestion({ database: database, name: 'questions' });
 } else {
-  database.ref('questionbaru').on('value', function (snapshot) {
-    console.log('SYNC Questions');
-    var result = snapshot.val();
-    if (result) {
-      var resultQuestions = [];
-      Object.keys(result || {}).forEach(function (key) {
-        resultQuestions.push(result[key]);
-      });
-      store.dispatch({
-        type: 'SYNC_QUESTIONS',
-        payload: {
-          questions: resultQuestions
-        }
-      });
-    }
-  });
+  nameDatabase = 'questionbaru';
+  questions.syncQuestion({ database: database, name: 'questionbaru' });
 }
 
 store.subscribe(function () {
@@ -138,6 +110,11 @@ store.subscribe(function () {
     currentUsers = state.users;
     console.log('SYNC to FIREBASE');
     room.syncScore({ database: database });
+  }
+
+  if (state.questions.length == 1) {
+    console.log("pertanyaan sudah mau habis SYNC PERTANYAAN");
+    questions.syncQuestion({ database: database, name: nameDatabase });
   }
 
   if (currentTimer != state.timer) {
@@ -226,7 +203,7 @@ var showOnBoarding = function showOnBoarding(displayName) {
 
 var showMenu = function showMenu(displayName) {
   return new Bot.Messages().addButtons({
-    thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
+    thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/acakkata-12bf7.appspot.com/o/coverpage.png?alt=media&token=15c56252-404f-49e9-b9c9-c8121fd9aba3',
     altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
     title: 'Acakata Menu',
     text: 'Mau mulai main?',
@@ -249,6 +226,70 @@ var showMenu = function showMenu(displayName) {
     }]
   }).commit();
 };
+
+var showShare = function showShare(user) {
+  return new Bot.Messages().addButtons({
+    thumbnailImageUrl: 'https://images.weserv.nl/?url=' + user.pictureUrl.replace(/http:\/\//g, '') + '&w=300',
+    altText: 'Skor ' + user.displayName + ' adalah ' + user.score,
+    title: 'Skor ' + user.displayName,
+    text: 'Skor ' + user.displayName + ' adalah ' + user.score,
+    actions: [{
+      type: 'uri',
+      label: 'Share',
+      uri: 'http://acakatagame.com/score/' + user.lineId
+    }, {
+      type: 'message',
+      label: 'Menu',
+      text: '/menu'
+    }]
+  }).commit();
+};
+
+var showHighscoreCarousel = function showHighscoreCarousel(highscores) {
+  var columns = highscores.map(function (user, i) {
+    return {
+      thumbnailImageUrl: 'https://images.weserv.nl/?url=' + user.pictureUrl.replace(/http:\/\//g, '') + '&w=300',
+      title: user.displayName,
+      text: user.displayName + ' berada di posisi ' + (i + 1) + ', dan mendapatkan skor ' + user.score,
+      actions: [{
+        type: 'uri',
+        label: 'Share',
+        uri: 'http://acakatagame.com/score/' + user.lineId
+      }]
+    };
+  });
+
+  return new Bot.Messages().addCarousel({ altText: 'Lihat highscore di smartphone kamu', columns: columns }).commit();
+};
+
+// .addButtons({
+//       thumbnailImageUrl: ,
+//       altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
+//       title: 'Acakata Menu',
+//       text: 'Mau mulai main?',
+//       actions: [
+//         {
+//           type: 'message',
+//           label: 'Mulai Main',
+//           text: '/battle'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Duel 1 vs 1',
+//           text: '/startduel'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Highscore',
+//           text: '/highscore'
+//         },
+//         {
+//           type: 'message',
+//           label: 'Keluar',
+//           text: '/exit'
+//         }
+//       ]
+//     })
 
 bot.on('webhook', function (_ref2) {
   var port = _ref2.port,
@@ -301,14 +342,18 @@ bot.on('text', function (_ref3) {
   } else if (text == '/help') {
     bot.pushMessage(source.userId, new Bot.Messages().addSticker({ packageId: 1, stickerId: 406 }).addText('Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!').commit());
   } else if (text == '/startduel') {
-    bot.pushMessage(source.userId, new Bot.Messages().addText('Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama di bawah>').commit());
-    room.listHighscore({ userId: source.userId, callback: function callback(_ref6) {
-        var user = _ref6.user,
-            highscores = _ref6.highscores;
+    bot.pushMessage(source.userId, new Bot.Messages().addText('Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama>').commit());
+    room.onlineUser({ roomId: 'test', callback: function callback(_ref6) {
+        var users = _ref6.users;
 
-        bot.pushMessage(user.lineId, new Bot.Messages().addText('' + highscores.map(function (user) {
-          return '- ' + user.displayName + ' = ' + user.score;
-        }).join('\n')).commit());
+        if (users.length <= 10 && users.length > 1) {
+          bot.pushMessage(source.userId, new Bot.Messages().addText('Pemain yang online:\n\n' + users.filter(function (user) {
+            return user.lineId != source.userId;
+          }).map(function (user) {
+            return '- ' + user.displayName;
+          }).join('\n')).commit());
+        }
+        bot.pushMessage(source.userId, new Bot.Messages().addText('Ada ' + users.length + ' pemain yang online').commit());
       } });
   } else if (text.indexOf('/duel') > -1) {
     var nameUser = text.split('/duel ')[1];
@@ -359,11 +404,16 @@ bot.on('text', function (_ref3) {
   } else if (text == '/highscore') {
     room.listHighscore({ userId: source.userId, callback: function callback(_ref9) {
         var user = _ref9.user,
-            highscores = _ref9.highscores;
+            highscores = _ref9.highscores,
+            position = _ref9.position;
 
-        bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n' + highscores.map(function (user) {
-          return '- ' + user.displayName + ' = ' + user.score;
+        bot.pushMessage(user.lineId, new Bot.Messages().addText('Highscore: \n\n' + highscores.map(function (user, i) {
+          return i + 1 + '. ' + user.displayName + ' = ' + user.score;
         }).join('\n')).commit());
+        bot.pushMessage(user.lineId, new Bot.Messages().addText('Kamu berada di urutan ke ' + (position + 1)).commit());
+        bot.pushMessage(user.lineId, showHighscoreCarousel(highscores)).catch(function (err) {
+          return console.log('ERR', err);
+        });
       } });
   } else if (text == '/exit') {
     var state = store.getState();
@@ -376,7 +426,9 @@ bot.on('text', function (_ref3) {
     }
     room.removeUser({ lineId: source.userId });
     bot.pushMessage(source.userId, new Bot.Messages().addText('Kamu sudah keluar dari permainan').commit());
-    bot.pushMessage(source.userId, showMenu());
+    bot.pushMessage(source.userId, showShare(currentUser)).catch(function (err) {
+      return console.log('ERR', err);
+    });
   } else if (text == '/menu') {
     bot.pushMessage(source.userId, showMenu());
   } else if (room.checkUserExist({ lineId: source.userId })) {

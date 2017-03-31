@@ -224,12 +224,22 @@ var Rooms = function () {
           callback = _ref7.callback;
 
       var state = this.store.getState();
-      var highscores = Object.keys(state.users).map(function (key) {
+      var position = 0;
+      var highscores = Object.keys(state.users).map(function (key, index) {
+
         return state.users[key];
       }).sort(function (a, b) {
         return b.score - a.score;
       });
-      callback({ user: { lineId: userId }, highscores: highscores });
+      highscores.forEach(function (user, index) {
+        if (user.lineId == userId) {
+          position = index;
+        }
+      });
+
+      var length = highscores.length < 10 ? highscores.length : 10;
+
+      callback({ user: { lineId: userId }, highscores: highscores.slice(0, length), position: position });
     }
   }, {
     key: 'onlineUser',
@@ -315,6 +325,41 @@ var Rooms = function () {
           }
         });
       }
+    }
+  }, {
+    key: 'syncImages',
+    value: function syncImages(_ref12) {
+      // const store = this.store
+      // const state = store.getState();
+      // let result = null;
+
+      // const env = process.env.NODE_ENV || 'development';
+      // if (env == 'production') {
+      //   database.ref('users').once('value').then(function(snapshot) {
+      //     result = snapshot.val();
+      //     if (result) {
+      //       store.dispatch({
+      //         type: 'SYNC',
+      //         payload: {
+      //           users: result
+      //         }
+      //       });
+      //     }
+      //   });
+      // } else {
+      // database.ref('userbaru').once('value').then(function(snapshot) {
+      //   result = snapshot.val();
+      //   if (result) {
+      //     let users = [];
+      //     Object.keys(result).forEach(key => {
+      //       const user = result[key];
+      //       users.push(user);
+      //     });
+      //   }
+      // });
+      // }
+
+      var database = _ref12.database;
     }
   }]);
 
