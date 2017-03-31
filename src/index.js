@@ -226,7 +226,7 @@ Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata 
 const showMenu = (displayName) => {
   return new Bot.Messages()
       .addButtons({
-        thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/memeline-76501.appspot.com/o/acakatacover.png?alt=media&token=85134e75-bdc7-4747-9590-1915b79baf0a',
+        thumbnailImageUrl: 'https://firebasestorage.googleapis.com/v0/b/acakkata-12bf7.appspot.com/o/coverpage.png?alt=media&token=15c56252-404f-49e9-b9c9-c8121fd9aba3',
         altText: 'Silakan ketik\n\n/battle untuk mulai battle\n/startduel untuk mulai duel\n/highscore untuk lihat score tertinggi\n/help untuk melihat cara bermain\n/exit untuk keluar dari battle atau duel',
         title: 'Acakata Menu',
         text: 'Mau mulai main?',
@@ -288,9 +288,12 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/help') {
     bot.pushMessage(source.userId, new Bot.Messages().addSticker({packageId: 1, stickerId: 406}).addText(`Cara mainnya gampang, kita tinggal cepet-cepetan menebak dari petunjuk dan kata yang diacak. Semakin cepat kita menebak benar maka score yang kita dapat semakin tinggi. Serunya, kita bertanding sama semua orang yang lagi main online juga!`).commit());
   } else if (text == '/startduel') {
-    bot.pushMessage(source.userId, new Bot.Messages().addText(`Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama di bawah>`).commit());
-    room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
-      bot.pushMessage(user.lineId, new Bot.Messages().addText(`${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
+    bot.pushMessage(source.userId, new Bot.Messages().addText(`Untuk mengundang duel silakan ketik\n\n/duel <salah satu nama>`).commit());
+    room.onlineUser({roomId: 'test', callback: ({users}) => {
+      if (users.length <= 10 && users.length > 1) {
+        bot.pushMessage(source.userId, new Bot.Messages().addText(`Pemain yang online:\n\n${users.filter(user => user.lineId != source.userId).map(user => (`- ${user.displayName}`)).join('\n')}`).commit());
+      }
+      bot.pushMessage(source.userId, new Bot.Messages().addText(`Ada ${users.length} pemain yang online`).commit());
     }});
   } else if (text.indexOf('/duel') > -1) {
     const nameUser = text.split('/duel ')[1]
@@ -336,6 +339,7 @@ bot.on('text', ({replyToken, source, source: { type }, message: { text }}) => {
   } else if (text == '/continue') {
     room.extendTime({lineId: source.userId});
   } else if (text == '/highscore') {
+    
     room.listHighscore({userId: source.userId, callback: ({user, highscores}) => {
       bot.pushMessage(user.lineId, new Bot.Messages().addText(`Highscore: \n\n${highscores.map(user => (`- ${user.displayName} = ${user.score}`)).join('\n')}`).commit());
     }});
