@@ -28,7 +28,7 @@ app.get("/audio", (req, res) => {
 
 app.post("/read", (req, res) => {
   const { queryResult } = req.body;
-  const { buku, pasal } = result.parameters;
+  const { buku, pasal } = queryResult.parameters;
   const activeBook = Books.find(book => book.value == buku);
   let bookId = Books.findIndex(book => book.value == activeBook.value);
   if (activeBook.type == "new") {
@@ -56,7 +56,7 @@ app.post("/read", (req, res) => {
 
   res.json({
     fulfillmentText: `<speak>
-  Here is the audio...
+  Here is ${activeBook.name} chapter ${pasal}...
   <audio src="${streamUrl}" />
   </speak>`
   });
