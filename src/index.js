@@ -52,13 +52,14 @@ app.post("/read", (req, res) => {
 
   const testament = activeBook.type == "old" ? "pl" : "pb";
   let chapterNumber = activeBook.total > 99 ? pad(pasal, 3) : pad(pasal, 2);
-  const streamUrl = `https://acakata.getputik.com/audio?url=alkitab_audio/tb_alkitabsuara/${testament}/mp3/cd/${bookNumber}_${bookName}/${bookNumber}_${bookShortName}${chapterNumber}.mp3`;
-
-  res.json({
-    fulfillmentText: `<speak>
+  const streamUrl = `https://acakata.getputik.com/audio?url=alkitab_audio/tb_alkitabsuara/${testament}/mp3/mobile/${bookNumber}_${bookName}/${bookNumber}_${bookShortName}${chapterNumber}.mp3`;
+  const fulfillmentText = `<speak>
   Here is ${activeBook.name} chapter ${pasal}...
   <audio src="${streamUrl}" />
-  </speak>`
+  </speak>`;
+  console.log(fulfillmentText);
+  res.json({
+    fulfillmentText: fulfillmentText
   });
 });
 
