@@ -54,7 +54,12 @@ app.post("/read", (req, res) => {
   let chapterNumber = activeBook.total > 99 ? pad(pasal, 3) : pad(pasal, 2);
   const streamUrl = `https://acakata.getputik.com/audio?url=alkitab_audio/tb_alkitabsuara/${testament}/mp3/cd/${bookNumber}_${bookName}/${bookNumber}_${bookShortName}${chapterNumber}.mp3`;
 
-  res.send(streamUrl);
+  res.json({
+    fulfillmentText: `<speak>
+  Here is the audio...
+  <audio src="${streamUrl}" />
+  </speak>`
+  });
 });
 
 app.listen(PORT, () => console.log("Example app listening on port 3000!"));
