@@ -1,1 +1,1 @@
-web: ./node_modules/forever/bin/forever build/index.js
+web: node src/index.js
