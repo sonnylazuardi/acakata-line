@@ -1,6 +1,18 @@
 const express = require("express");
 const Books = require("./books");
 const bodyParser = require("body-parser");
+
+var ApolloClient = require('apollo-client').default;
+var HttpLink = require('apollo-link-http').HttpLink;
+var gql = require('graphql-tag');
+var InMemoryCache = require('apollo-cache-inmemory').InMemoryCache;
+require('es6-promise').polyfill();
+require('isomorphic-fetch');
+var client = new ApolloClient({ 
+  link: new HttpLink({ uri: 'https://api.graph.cool/simple/v1/cjj3qc65855ik0115w5jmxm6r', fetch }),
+  cache: new InMemoryCache().restore({}),
+});
+
 const app = express();
 
 // parse application/x-www-form-urlencoded
@@ -99,5 +111,69 @@ app.post("/readhd", (req, res) => {
     fulfillmentText: fulfillmentText
   });
 });
+
+app.get('/grabdaily', (req, res) => {
+  const request = req.query;
+  console.log(request);
+  const {
+    createdAt,
+    activityType,
+    name,
+    distanceMeters,
+    elapsedTime,
+    elapsedTimeInSeconds,
+    linkToActivity,
+    routeMapImageUrl,
+  } = request;
+
+  client.mutate({
+    mutation: gql`
+      mutation (
+        $createdAt: String!,
+        $activityType: String!,
+        $name: String!,
+        $distanceMeters: Float!,
+        $elapsedTime: String!,
+        $elapsedTimeInSeconds: Float!,
+        $linkToActivity: String!,
+        $routeMapImageUrl: String
+      ) {
+        createStrava(
+          createdAtFormat: $createdAt,
+          activityType: $activityType,
+          name: $name,
+          distanceMeters: $distanceMeters,
+          elapsedTime: $elapsedTime,
+          elapsedTimeInSeconds: $elapsedTimeInSeconds,
+          linkToActivity: $linkToActivity,
+          routeMapImageUrl: $routeMapImageUrl
+        ) {
+          id,
+          name,
+          linkToActivity,
+          activityType,
+          distanceMeters
+        }
+      }
+    `,
+    variables: {
+      createdAt,
+      activityType,
+      name,
+      distanceMeters: parseFloat(distanceMeters),
+      elapsedTime,
+      elapsedTimeInSeconds: parseFloat(elapsedTimeInSeconds),
+      linkToActivity,
+      routeMapImageUrl,
+    },
+  })
+  .then((data) => {
+    res.json(data);
+  })
+  .catch((error) => {
+    console.log(error);
+    res.json(error);
+  });
+})
 
 app.listen(PORT, () => console.log("Example app listening on port 3000!"));
