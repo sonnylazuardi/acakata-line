@@ -176,4 +176,44 @@ app.get('/grabdaily', (req, res) => {
   });
 })
 
+app.get('/grabdaily/all', (req, res) => {
+  const request = req.query;
+  console.log(request);
+  const {
+    createdAt,
+    activityType,
+    name,
+    distanceMeters,
+    elapsedTime,
+    elapsedTimeInSeconds,
+    linkToActivity,
+    routeMapImageUrl,
+  } = request;
+
+  client.query({
+    query: gql`
+      query Strava {
+        allStravas {
+          createdAtFormat,
+          activityType,
+          name,
+          distanceMeters,
+          elapsedTime,
+          elapsedTimeInSeconds,
+          linkToActivity,
+          routeMapImageUrl,
+        }
+      }
+    `,
+  })
+  .then((data) => {
+    res.json(data.data.allStravas);
+  })
+  .catch((error) => {
+    console.log(error);
+    res.json(error);
+  });
+})
+
+
 app.listen(PORT, () => console.log("Example app listening on port 3000!"));
