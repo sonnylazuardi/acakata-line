@@ -1,50 +1,52 @@
-import uuid from 'uuid';
-import questionList from './questionList';
+const uuid = require("uuid");
+const questionList = require("./questionList");
 
 const initialState = {
   questions: questionList,
   timer: 5,
   activeQuestion: {
-    correctCounter: 0
+    correctCounter: 0,
   },
   rooms: {},
   answers: [],
   users: {},
   round: 0,
-}
+};
 
-export default function questions(state = initialState, action) {
-  const {payload} = action;
+function questions(state = initialState, action) {
+  const { payload } = action;
   switch (action.type) {
-    case 'TICK_TIMER':
+    case "TICK_TIMER":
       return {
         ...state,
         timer: payload.timer,
       };
-    case 'CHANGE_ACTIVE_QUESTION':
+    case "CHANGE_ACTIVE_QUESTION":
       return {
         ...state,
         activeQuestion: {
           ...payload.activeQuestion,
-          correctCounter: 0
+          correctCounter: 0,
         },
         questionId: uuid.v4(),
-        answers: []
+        answers: [],
       };
-    case 'CREATE_ROOM':
+    case "CREATE_ROOM":
       return {
         ...state,
-        rooms: state.rooms.hasOwnProperty(payload.roomId) ? state.rooms : {
-          ...state.rooms,
-          [payload.roomId]: {}
-        }
-      }
-    case 'ANSWER':
+        rooms: state.rooms.hasOwnProperty(payload.roomId)
+          ? state.rooms
+          : {
+              ...state.rooms,
+              [payload.roomId]: {},
+            },
+      };
+    case "ANSWER":
       return {
         ...state,
         activeQuestion: {
           ...state.activeQuestion,
-          correctCounter: payload.correctCounter
+          correctCounter: payload.correctCounter,
         },
         answers: [
           ...state.answers,
@@ -54,20 +56,20 @@ export default function questions(state = initialState, action) {
             addedScore: payload.answer.addedScore,
             answerText: payload.answer.text,
             answerState: payload.answer.state,
-            roomId : payload.roomId,
-            displayName: payload.user.displayName
-          }
+            roomId: payload.roomId,
+            displayName: payload.user.displayName,
+          },
         ],
         users: {
           ...state.users,
           [payload.user.lineId]: {
-              ...state.users[payload.user.lineId],
-              score: payload.user.score,
-              lastAnswerTime: Date.now()
-          }
-        }
-      }
-    case 'REMOVE_USER':
+            ...state.users[payload.user.lineId],
+            score: payload.user.score,
+            lastAnswerTime: Date.now(),
+          },
+        },
+      };
+    case "REMOVE_USER": {
       var updateRoom = {};
       Object.keys(state.rooms || {}).forEach((roomId) => {
         updateRoom[roomId] = {};
@@ -85,86 +87,102 @@ export default function questions(state = initialState, action) {
           ...state.users,
           [payload.user.lineId]: {
             ...state.users[payload.user.lineId],
-            activeRoomId: null
-          }
-        }
+            activeRoomId: null,
+          },
+        },
       };
       return newState;
-    case 'ADD_USER':
-      var updateRoom = {
+    }
+    case "ADD_USER": {
+      const updateRoom = {
         ...state.rooms[payload.user.roomId],
         [payload.user.lineId]: {
-          lineId: payload.user.lineId
-        }
+          lineId: payload.user.lineId,
+        },
       };
-      var newState = {
+      const newState = {
         ...state,
         rooms: {
           ...state.rooms,
-          [payload.user.roomId]: updateRoom
+          [payload.user.roomId]: updateRoom,
         },
-        users:{
+        users: {
           ...state.users,
           [payload.user.lineId]: {
             lineId: payload.user.lineId,
             replyToken: payload.user.replyToken,
-            score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0 ,
+            score:
+              state.users[payload.user.lineId] &&
+              state.users[payload.user.lineId].score
+                ? state.users[payload.user.lineId].score
+                : 0,
             displayName: payload.user.displayName,
             activeRoomId: payload.user.roomId,
             lastAnswerTime: Date.now(),
-            pictureUrl: payload.user.pictureUrl
-          }
-        }
-      }
+            pictureUrl: payload.user.pictureUrl,
+          },
+        },
+      };
       return newState;
-    case 'ADD_USER_FOLLOW':
-      var newState = {
+    }
+    case "ADD_USER_FOLLOW": {
+      const newState = {
         ...state,
-        users:{
+        users: {
           ...state.users,
           [payload.user.lineId]: {
             lineId: payload.user.lineId,
-            score: state.users[payload.user.lineId] && state.users[payload.user.lineId].score ? state.users[payload.user.lineId].score : 0,
+            score:
+              state.users[payload.user.lineId] &&
+              state.users[payload.user.lineId].score
+                ? state.users[payload.user.lineId].score
+                : 0,
             displayName: payload.user.displayName,
             activeRoomId: null,
-            pictureUrl: payload.user.pictureUrl
-          }
-        }
-      }
+            pictureUrl: payload.user.pictureUrl,
+          },
+        },
+      };
       return newState;
-    case 'EXTEND_TIME':
+    }
+    case "EXTEND_TIME":
       return {
         ...state,
         users: {
           ...state.users,
           [payload.user.lineId]: {
             ...state.users[payload.user.lineId],
-            lastAnswerTime: Date.now()
-          }
-        }
+            lastAnswerTime: Date.now(),
+          },
+        },
       };
-    case 'SYNC_QUESTIONS':
+    case "SYNC_QUESTIONS":
       return {
         ...state,
-        questions: payload.questions
-      }
-    case 'SYNC':
+        questions: payload.questions,
+      };
+    case "SYNC":
       var newState = {
         ...state,
-        users: payload.users
-      }
+        users: payload.users,
+      };
       return newState;
-    case 'NEXT_ROUND':
+    case "NEXT_ROUND":
       return {
         ...state,
-        round: payload.round
-      }
-    case 'POP_QUESTION':
+        round: payload.round,
+      };
+    case "POP_QUESTION":
       return {
         ...state,
-        questions: [...state.questions.slice(0,payload.id),...state.questions.slice(payload.id+1)]
-      }
+        questions: [
+          ...state.questions.slice(0, payload.id),
+          ...state.questions.slice(payload.id + 1),
+        ],
+      };
     default:
-      return state
+      return state;
   }
 }
+
+module.exports = questions;

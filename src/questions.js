@@ -1,4 +1,4 @@
-export default class Questions {
+class Questions {
   constructor(store) {
     this.store = store;
     this.questionTimeout = null;
@@ -8,21 +8,23 @@ export default class Questions {
 
   shuffleWord(str) {
     var a = str.split(""),
-        n = a.length;
+      n = a.length;
 
-    for(var i = n - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = a[i];
-        a[i] = a[j];
-        a[j] = tmp;
+    for (var i = n - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
     }
     return a.join("");
   }
 
   shuffle(str) {
-    var splitStr = str.split(' ');
+    var splitStr = str.split(" ");
     if (splitStr.length > 1) {
-      return splitStr.map(currentStr => this.shuffleWord(currentStr)).join(' ');
+      return splitStr
+        .map((currentStr) => this.shuffleWord(currentStr))
+        .join(" ");
     } else {
       return this.shuffleWord(str);
     }
@@ -35,7 +37,7 @@ export default class Questions {
     const activeQuestion = {
       ...state.questions[randInt],
       randomAnswer: this.shuffle(state.questions[randInt].answer),
-      id: randInt
+      id: randInt,
     };
     return activeQuestion;
   }
@@ -43,33 +45,33 @@ export default class Questions {
   start() {
     const store = this.store;
     if (!this.questionTimeout) {
-      console.log('START QUESTION TIMEOUT');
+      console.log("START QUESTION TIMEOUT");
       this.questionTimeout = setInterval(() => {
         const state = store.getState();
         let nextTimer = state.timer - 1;
         if (nextTimer < 0) {
           nextTimer = this.timerCount;
-          const activeQuestion = this.randomize()
+          const activeQuestion = this.randomize();
           store.dispatch({
-            type: 'CHANGE_ACTIVE_QUESTION',
+            type: "CHANGE_ACTIVE_QUESTION",
             payload: {
-              activeQuestion: activeQuestion
-            }
+              activeQuestion: activeQuestion,
+            },
           });
-          if(state.round != 0 ){
+          if (state.round != 0) {
             store.dispatch({
-              type: 'POP_QUESTION',
+              type: "POP_QUESTION",
               payload: {
-                id: activeQuestion.id
-              }
+                id: activeQuestion.id,
+              },
             });
           }
         }
         store.dispatch({
-          type: 'TICK_TIMER',
+          type: "TICK_TIMER",
           payload: {
-            timer: nextTimer
-          }
+            timer: nextTimer,
+          },
         });
       }, 1000);
     }
@@ -89,11 +91,11 @@ export default class Questions {
       newRound = 0;
     }
     store.dispatch({
-      type: 'NEXT_ROUND',
+      type: "NEXT_ROUND",
       payload: {
-        round: newRound
-      }
-    })
+        round: newRound,
+      },
+    });
   }
 
   getRound() {
@@ -102,16 +104,16 @@ export default class Questions {
     return state.round;
   }
 
-  checkAnswer({answerText, lineId}) {
+  checkAnswer({ answerText, lineId }) {
     const store = this.store;
     const state = store.getState();
     let currentUser = state.users[lineId];
-    if(!currentUser || !currentUser.activeRoomId) {
-      return
+    if (!currentUser || !currentUser.activeRoomId) {
+      return;
     }
-    let roomId = currentUser.activeRoomId
-    console.log(state.users)
-    console.log('CHECK ANSWER', state.activeQuestion);
+    let roomId = currentUser.activeRoomId;
+    console.log(state.users);
+    console.log("CHECK ANSWER", state.activeQuestion);
 
     let correctCounter = state.activeQuestion.correctCounter;
     let answer = {
@@ -119,7 +121,7 @@ export default class Questions {
       addedScore: 0,
     };
 
-    const myCurrentAnswer = state.answers.filter(answer => {
+    const myCurrentAnswer = state.answers.filter((answer) => {
       return answer.lineId == lineId && answer.answerState;
     });
 
@@ -148,14 +150,14 @@ export default class Questions {
       answer.state = false;
     }
     store.dispatch({
-      type: 'ANSWER',
+      type: "ANSWER",
       payload: {
         answer: answer,
         user: currentUser,
         roomId,
-        correctCounter: correctCounter
-      }
-    })
+        correctCounter: correctCounter,
+      },
+    });
   }
 
   stop() {
@@ -163,27 +165,26 @@ export default class Questions {
     this.questionTimeout = null;
   }
 
-  syncQuestion({database,name}) {
+  syncQuestion({ database, name }) {
     const store = this.store;
-    database.ref(name).on('value', (snapshot) => {
-      console.log('SYNC Questions');
+    database.ref(name).on("value", (snapshot) => {
+      console.log("SYNC Questions");
       var result = snapshot.val();
       if (result) {
         const resultQuestions = [];
-        Object.keys(result || {}).forEach(key => {
+        Object.keys(result || {}).forEach((key) => {
           resultQuestions.push(result[key]);
         });
         store.dispatch({
-          type: 'SYNC_QUESTIONS',
+          type: "SYNC_QUESTIONS",
           payload: {
-            questions: resultQuestions
-          }
+            questions: resultQuestions,
+          },
         });
       }
     });
   }
 }
-
 
 // > Ibukota negara Indonesia
 // > SAIDONNIA
@@ -210,10 +211,8 @@ export default class Questions {
 // > A menjawab Indonesia + 1
 // > C menjawab Indonesia + 1
 
-
 // High score sementara
 // - B:
-
 
 // - Menu Utama
 //   > minta nickname
@@ -231,3 +230,5 @@ export default class Questions {
 //   - score
 //     > High score
 //     > score dia skr
+
+module.exports = Questions;

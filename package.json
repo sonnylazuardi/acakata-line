@@ -2,38 +2,29 @@
   "name": "family100-bot",
   "version": "1.0.0",
   "description": "",
-  "engines": {
-    "node": "8.9.1"
-  },
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "node test.js"
-  },
-  "dependencies": {
-    "apollo-cache-inmemory": "^1.2.5",
-    "apollo-client": "^2.3.5",
-    "apollo-link-http": "^1.5.4",
-    "body-parser": "^1.18.3",
-    "ejs": "^2.5.6",
-    "es6-promise": "^4.2.4",
-    "express": "^4.15.2",
-    "graphql": "^0.13.2",
-    "graphql-tag": "^2.9.2",
-    "isomorphic-fetch": "^2.2.1"
-  },
-  "devDependencies": {
-    "request": "^2.81.0",
-    "tape": "^4.7.0"
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/heroku/node-js-getting-started"
+    "url": "git+https://github.com/sonnylazuardi/family100-bot.git"
   },
-  "keywords": [
-    "node",
-    "heroku",
-    "express"
-  ],
-  "license": "MIT"
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sonnylazuardi/family100-bot/issues"
+  },
+  "homepage": "https://github.com/sonnylazuardi/family100-bot#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "firebase-admin": "^8.11.0",
+    "node-line-messaging-api": "^0.19.0",
+    "redux": "^4.0.5",
+    "reselect": "^4.0.0",
+    "uuid": "^7.0.3"
+  },
+  "engines": {
+    "node": "10.x"
+  }
 }
