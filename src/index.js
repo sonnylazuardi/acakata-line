@@ -5,8 +5,6 @@ const firebase = require("firebase-admin");
 
 var serviceAccount = require("./firebase");
 
-var serviceAccount = require("./acakkata-firebase.json");
-
 firebase.initializeApp({
   credential: firebase.credential.cert(serviceAccount),
   databaseURL: "https://acakkata-12bf7.firebaseio.com",
